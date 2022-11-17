@@ -13,13 +13,20 @@ website:
         text: Home
       - href: about.qmd
         text: About Me
+      - icon: github
+        href: https://github.com/jordanong09
 
 format:
   html:
-    theme: simplex
+    theme: journal
     css: styles.css
     toc: true
     date-format: long
+    code-link: true
 
 editor: visual
+
+comments:
+  giscus:
+    repo: jordanong09/ISSS624_Geospatial
 
