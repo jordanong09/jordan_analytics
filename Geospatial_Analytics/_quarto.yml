@@ -8,10 +8,11 @@ website:
   navbar:
     search: true
     logo: /media/geospatial.png
-    left:
+    right:
       - href: index.qmd
         text: Home
-      - about.qmd
+      - href: about.qmd
+        text: About Me
 
 format:
   html:

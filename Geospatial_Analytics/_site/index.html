@@ -70,9 +70,9 @@ ul.task-list li input[type="checkbox"] {
     }
 
     const options = {
-      valueNames: ['listing-title','listing-subtitle','listing-author','listing-image','listing-date','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      valueNames: ['listing-title','listing-subtitle','listing-author','listing-date','listing-categories','listing-image',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
       
-      searchColumns: ["listing-categories"],
+      searchColumns: ["listing-date","listing-title","listing-author","listing-subtitle","listing-image","listing-description","listing-categories"],
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
@@ -113,12 +113,12 @@ ul.task-list li input[type="checkbox"] {
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav navbar-nav-scroll me-auto">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
     <a class="nav-link active" href="./index.html" aria-current="page">Home</a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html">About</a>
+    <a class="nav-link" href="./about.html">About Me</a>
   </li>  
 </ul>
               <div id="quarto-search" class="" title="Search"></div>
@@ -132,7 +132,7 @@ ul.task-list li input[type="checkbox"] {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(0)</span></div></div></div>
+    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ggstatsplot">ggstatsplot <span class="quarto-category-count">(1)</span></div><div class="category" data-category="tibble">tibble <span class="quarto-category-count">(1)</span></div></div></div>
 <!-- main -->
 <main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
 
@@ -144,7 +144,40 @@ ul.task-list li input[type="checkbox"] {
 
 <div class="quarto-listing quarto-listing-container-default" id="listing-listing">
 <div class="list quarto-listing-default">
-
+<div class="quarto-post image-right" data-index="0" data-categories="tibble,ggstatsplot" data-listing-date-sort="1654617600000" data-listing-file-modified-sort="1668655860998" data-listing-reading-time-sort="10.395">
+<div class="thumbnail">
+<p><a href="./posts/SIS Representation/SISRepresentation.html"> <img src="./posts/SIS Representation/graphs.png" class="thumnail-image"> </a></p>
+</div>
+<div class="body">
+<a href="./posts/SIS Representation/SISRepresentation.html">
+<h3 class="no-anchor listing-title">
+SIS Visual Representation
+</h3>
+<div class="listing-subtitle">
+Using Static, Interactive and Statistical (SIS) Graphs to reveal the demographics and relationships of a city.
+</div>
+</a>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('tibble'); return false;">
+tibble
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('ggstatsplot'); return false;">
+ggstatsplot
+</div>
+</div>
+<a href="./posts/SIS Representation/SISRepresentation.html"> </a>
+</div>
+<div class="metadata">
+<a href="./posts/SIS Representation/SISRepresentation.html">
+<div class="listing-date">
+June 8, 2022
+</div>
+<div class="listing-author">
+Ong Zhi Rong Jordan
+</div>
+</a>
+</div>
+</div>
 </div>
 <div class="listing-no-matching d-none">
 No matching items
