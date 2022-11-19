@@ -4,8 +4,9 @@ subtitle: Using Static, Interactive and Statistical (SIS) Graphs to reveal the d
 author: "Ong Zhi Rong Jordan"
 date: 2022-11-19
 categories:
-  - tibble
-  - ggstatsplot
+  - geospatial
+  - tmap
+  - sf
 image: "geomap.png"
 toc: true
 editor: visual
