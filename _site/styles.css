@@ -23,20 +23,20 @@ div.quarto-post .thumbnail img {
 }
 
 .navbar-dark {
-    background-color: var(--bs-blue);
+    background-color: var(--bs-primary);
 }
 
 .page-item.active .page-link {
     z-index: 3;
     color: #fff;
-    background-color: var(--bs-blue);
-    border-color: var(--bs-blue);
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
 }
 
 .quarto-title-banner {
     margin-bottom: 1em;
     color: rgba(255,255,255,.7);
-    background: var(--bs-blue);
+    background: var(--bs-primary);
 }
 
 
@@ -53,11 +53,11 @@ div.quarto-post .thumbnail img {
 }
 
 a{
-  color: var(--bs-blue);
+  color: var(--bs-primary);
 }
 
 b, strong {
-    color: var(--bs-blue);
+    color: var(--bs-primary);
     font-weight: bolder;
 }
 
@@ -70,8 +70,8 @@ div.quarto-post .listing-categories .listing-category {
 
 .btn-primary {
     color: #fff;
-    background-color: var(--bs-blue);
-    border-color: var(--bs-blue);
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
 }
 
 .sidebar nav[role=doc-toc] ul>li>a.active {
