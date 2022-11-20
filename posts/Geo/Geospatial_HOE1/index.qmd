@@ -1,6 +1,6 @@
 ---
-title: "Geospatial Hands On Exercise 1"
-subtitle: Using Static, Interactive and Statistical (SIS) Graphs to reveal the demographics and relationships of a city.
+title: "Introduction to Choropleth Mapping"
+subtitle: Understanding the sf and tmap package to reveal geographical information.
 author: "Ong Zhi Rong Jordan"
 date: 2022-11-19
 categories:
@@ -56,9 +56,7 @@ plot(mpsz["PLN_AREA_N"])
 
 ```
 
-
 ## Changing of Projection
-
 
 ```{r}
 mpsz3414 <- st_set_crs(mpsz, 3414)
@@ -67,7 +65,6 @@ preschool3414 <- st_transform(preschool,
                               crs = 3414)
 
 ```
-
 
 ## Importing and Converting An Aspatial Data
 
@@ -88,7 +85,6 @@ listings_sf <- st_as_sf(listings,
 glimpse(listings_sf)
 
 ```
-
 
 ```{r}
 
@@ -128,7 +124,6 @@ hist(mpsz3414$`PreSch Density`)
 
 ## Visualising of geographical data using ggplot2
 
-
 ```{r}
 
 ggplot(data=mpsz3414, 
@@ -144,7 +139,6 @@ ggplot(data=mpsz3414,
 
 ```
 
-
 ```{r}
 
 ggplot(data=mpsz3414, 
@@ -156,7 +150,6 @@ ggplot(data=mpsz3414,
 
 ```
 
-
 ## Choropleth Mapping with R
 
 ```{r}
@@ -165,7 +158,6 @@ popdata <- read_csv("data/aspatial/respopagesextod2011to2020.csv")
 
 
 ```
-
 
 ```{r}
 popdata2020 <- popdata %>%
@@ -211,7 +203,6 @@ qtm(mpsz_pop2020,
 
 ```
 
-
 ```{r}
 
 tm_shape(mpsz_pop2020)+
@@ -241,7 +232,6 @@ tm_shape(mpsz_pop2020) +
   tm_polygons()
 
 ```
-
 
 ```{r}
 
@@ -279,7 +269,6 @@ tm_shape(mpsz_pop2020)+
   tm_borders(alpha = 0.5)
 
 ```
-
 
 ```{r}
 
@@ -342,7 +331,6 @@ tm_shape(mpsz_pop2020)+
 
 ```
 
-
 ```{r}
 
 tm_shape(mpsz_pop2020)+
@@ -366,7 +354,6 @@ tm_shape(mpsz_pop2020)+
 
 ```
 
-
 ```{r}
 tm_shape(mpsz_pop2020)+
   tm_fill(c("YOUNG", "AGED"),
@@ -383,7 +370,6 @@ tm_shape(mpsz_pop2020)+
   tm_layout(legend.position = c("right", "bottom"))
 
 ```
-
 
 ```{r}
 
@@ -402,7 +388,6 @@ tm_shape(mpsz_pop2020) +
 
 ```
 
-
 ```{r}
 
 youngmap <- tm_shape(mpsz_pop2020)+ 
@@ -419,7 +404,6 @@ tmap_arrange(youngmap, agedmap, asp=1, ncol=2)
 
 
 ```
-
 
 ```{r}
 
