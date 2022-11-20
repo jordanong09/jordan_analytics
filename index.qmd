@@ -42,7 +42,7 @@ title-block-banner: true
 comments: false
 ---
 
-## Recent posts 
+## Recent posts
 
 ::: {#posts}
 :::
@@ -52,7 +52,6 @@ comments: false
 <br>
 
 ## Posts of my own works
-
 
 ::: {#posts-me}
 :::

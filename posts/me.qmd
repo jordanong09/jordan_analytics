@@ -2,7 +2,7 @@
 title: "Jordan OZR"
 listing:
   - id: posts-me
-    contents: "posts/Me/**/*.qmd"
+    contents: posts/Me/**/*.qmd
     type: default
     fields: [title, subtitle, author, date, categories, image]  
     sort: "date desc"

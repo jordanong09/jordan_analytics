@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/Me/RFM/index.html",
       "/posts/Me/SIS Representation/index.html",
       "/posts/Geo/Geospatial_HOE1/index.html"
     ]
@@ -12,10 +13,7 @@
   },
   {
     "listing": "/posts/index.html",
-    "items": [
-      "/posts/Geo/Geospatial_HOE1/index.html",
-      "/posts/Me/SIS Representation/index.html"
-    ]
+    "items": []
   },
   {
     "listing": "/posts/me.html",

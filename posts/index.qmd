@@ -2,7 +2,7 @@
 title: "Jordan OZR"
 listing:
   - id: post
-    contents: "**/*/index.qmd"
+    contents: posts/**/*/index.qmd
     type: grid
     fields: [title, subtitle, author, date, categories, image]  
     sort: "date desc"
