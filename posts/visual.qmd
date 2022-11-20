@@ -2,7 +2,7 @@
 title: "Jordan OZR"
 listing:
   - id: posts-visual
-    contents: posts/Visual/**/*.qmd
+    contents: "Visual/**/*.qmd"
     type: default
     fields: [title, subtitle, author, date, categories, image]  
     sort: "date desc"
@@ -14,7 +14,7 @@ title-block-banner: false
 comments: false
 ---
 
-## Posts of my own works
+## Posts of Visual Analytics work
 
 ::: {#posts-visual}
 :::

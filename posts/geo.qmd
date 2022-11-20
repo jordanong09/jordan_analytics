@@ -2,7 +2,7 @@
 title: "Jordan OZR"
 listing:
   - id: posts-geo
-    contents: posts/Geo/**/index.qmd
+    contents: "Geo/**/*.qmd"
     type: default
     fields: [title, subtitle, author, date, categories, image]  
     sort: "date desc"
