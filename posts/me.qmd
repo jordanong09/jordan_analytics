@@ -1,0 +1,20 @@
+---
+title: "Jordan OZR"
+listing:
+  - id: posts-me
+    contents: "posts/Me/**/*.qmd"
+    type: default
+    fields: [title, subtitle, author, date, categories, image]  
+    sort: "date desc"
+    sort-ui: true
+    filter-ui: true
+    page-size: 10
+page-layout: full
+title-block-banner: false
+comments: false
+---
+
+## Posts of my own works
+
+::: {#posts-me}
+:::

@@ -1,14 +1,74 @@
 ---
+title: "Jordan OZR"
 listing:
-  contents: posts
-  sort: "date desc"
-  type: default
-  categories: true
-  sort-ui: false
-  filter-ui: false
-  page-size: 3
-  fields: [title, subtitle, author, date, categories, image]
+  - id: posts-me
+    contents: posts/Me/**/*.qmd
+    type: default
+    fields: [title, subtitle, author, date, categories, image]
+    sort: "date desc"
+    sort-ui: false
+    filter-ui: false
+    page-size: 3
+    
+  - id: posts-visual
+    contents: posts/Visual/**/*.qmd
+    type: default
+    fields: [title, subtitle, author, date, categories, image]
+    sort: "date desc"
+    sort-ui: false
+    filter-ui: false
+    page-size: 3
+    
+  - id: posts-geo
+    contents: posts/Geo/**/*.qmd
+    type: default
+    fields: [title, subtitle, author, date, categories, image]
+    sort: "date desc"
+    sort-ui: false
+    filter-ui: false
+    page-size: 3
+  
+  - id: posts
+    contents: posts/**/*/index.qmd
+    type: grid
+    fields: [title, subtitle, author, date, categories, image]
+    sort: "date desc"
+    sort-ui: false
+    filter-ui: false
+    page-size: 3 
+    
 page-layout: full
 title-block-banner: true
 comments: false
 ---
+
+## Recent posts 
+
+::: {#posts}
+:::
+
+<a href="../posts/index.html"> <button type="button" class="btn btn-primary float-end btn-sm">See all</button></a>
+
+<br>
+
+## Posts of my own works
+
+
+::: {#posts-me}
+:::
+
+<a href="../posts/me.html"> <button type="button" class="btn btn-primary float-end btn-sm">See all posts of my work</button></a>
+
+## Posts from Geospatial Analytics
+
+::: {#posts-geo}
+:::
+
+<a href="../posts/geo.html"> <button type="button" class="btn btn-primary float-end btn-sm">See all posts of Geospatial</button></a>
+
+## Posts from Visual Analytics
+
+::: {#posts-visual}
+:::
+
+<a href="../posts/visual.html"> <button type="button" class="btn btn-primary float-end btn-sm">See all posts of Visual</button></a>

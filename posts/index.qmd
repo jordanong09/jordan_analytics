@@ -1,0 +1,21 @@
+---
+title: "Jordan OZR"
+listing:
+  - id: post
+    contents: "**/*/index.qmd"
+    type: grid
+    fields: [title, subtitle, author, date, categories, image]  
+    sort: "date desc"
+    sort-ui: true
+    filter-ui: true
+    page-size: 20
+page-layout: full
+title-block-banner: false
+comments: false
+toc: true
+---
+
+## Posts of my own works
+
+::: {#post}
+:::

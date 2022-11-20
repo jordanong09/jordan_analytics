@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Bringing Geographical Data to Life</title>
+<title>Bringing Geographical Data to Life - Jordan OZR</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -63,7 +63,7 @@ ul.task-list li input[type="checkbox"] {
 <script>
 
   window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
+    const listingTargetEl = window.document.querySelector('#listing-posts-me .list');
     if (!listingTargetEl) {
       // No listing discovered, do not attach.
       return; 
@@ -72,11 +72,95 @@ ul.task-list li input[type="checkbox"] {
     const options = {
       valueNames: ['listing-title','listing-subtitle','listing-author','listing-date','listing-categories','listing-image',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
       
-      searchColumns: ["listing-date","listing-title","listing-author","listing-subtitle","listing-image","listing-description","listing-categories"],
+      searchColumns: ["listing-date","listing-title","listing-author","listing-subtitle","listing-image","listing-description"],
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
+    window['quarto-listings']['listing-posts-me'] = new List('listing-posts-me', options);
+
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  });
+
+  window.addEventListener('hashchange',() => {
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  })
+  
+
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    const listingTargetEl = window.document.querySelector('#listing-posts-visual .list');
+    if (!listingTargetEl) {
+      // No listing discovered, do not attach.
+      return; 
+    }
+
+    const options = {
+      valueNames: ['listing-title','listing-subtitle','listing-author','listing-date','listing-categories','listing-image',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      
+      searchColumns: [],
+    };
+
+    window['quarto-listings'] = window['quarto-listings'] || {};
+    window['quarto-listings']['listing-posts-visual'] = new List('listing-posts-visual', options);
+
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  });
+
+  window.addEventListener('hashchange',() => {
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  })
+  
+
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    const listingTargetEl = window.document.querySelector('#listing-posts-geo .list');
+    if (!listingTargetEl) {
+      // No listing discovered, do not attach.
+      return; 
+    }
+
+    const options = {
+      valueNames: ['listing-title','listing-subtitle','listing-author','listing-date','listing-categories','listing-image',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      
+      searchColumns: ["listing-date","listing-title","listing-author","listing-subtitle","listing-image","listing-description"],
+    };
+
+    window['quarto-listings'] = window['quarto-listings'] || {};
+    window['quarto-listings']['listing-posts-geo'] = new List('listing-posts-geo', options);
+
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  });
+
+  window.addEventListener('hashchange',() => {
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  })
+  
+
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    const listingTargetEl = window.document.querySelector('#listing-posts .list');
+    if (!listingTargetEl) {
+      // No listing discovered, do not attach.
+      return; 
+    }
+
+    const options = {
+      valueNames: ['listing-title','listing-subtitle','listing-author','listing-date','listing-categories','listing-image',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      
+      searchColumns: ["listing-title","listing-author","listing-date","listing-image","listing-description"],
+    };
+
+    window['quarto-listings'] = window['quarto-listings'] || {};
+    window['quarto-listings']['listing-posts'] = new List('listing-posts', options);
 
     if (window['quarto-listing-loaded']) {
       window['quarto-listing-loaded']();
@@ -132,29 +216,178 @@ ul.task-list li input[type="checkbox"] {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-page-left">
+      <h1 class="title">Jordan OZR</h1>
+                      </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(2)</span></div><div class="category" data-category="geospatial">geospatial <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ggstatsplot">ggstatsplot <span class="quarto-category-count">(1)</span></div><div class="category" data-category="sf">sf <span class="quarto-category-count">(1)</span></div><div class="category" data-category="tibble">tibble <span class="quarto-category-count">(1)</span></div><div class="category" data-category="tmap">tmap <span class="quarto-category-count">(1)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#recent-posts" id="toc-recent-posts" class="nav-link active" data-scroll-target="#recent-posts">Recent posts</a></li>
+  <li><a href="#posts-of-my-own-works" id="toc-posts-of-my-own-works" class="nav-link" data-scroll-target="#posts-of-my-own-works">Posts of my own works</a></li>
+  <li><a href="#posts-from-geospatial-analytics" id="toc-posts-from-geospatial-analytics" class="nav-link" data-scroll-target="#posts-from-geospatial-analytics">Posts from Geospatial Analytics</a></li>
+  <li><a href="#posts-from-visual-analytics" id="toc-posts-from-visual-analytics" class="nav-link" data-scroll-target="#posts-from-visual-analytics">Posts from Visual Analytics</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
 <main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
 
 
 
 
-
-
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
+<section id="recent-posts" class="level2">
+<h2 class="anchored" data-anchor-id="recent-posts">Recent posts</h2>
+<div id="listing-posts" class="quarto-listing quarto-listing-container-grid">
+<div class="list grid quarto-listing-cols-3">
+<div class="g-col-1" data-index="0" data-categories="geospatial,tmap,sf" data-listing-date-sort="1668787200000" data-listing-file-modified-sort="1668926249166" data-listing-reading-time-sort="9.195">
+<a href="./posts/Geo/Geospatial_HOE1/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img src="./posts/Geo/Geospatial_HOE1/geomap.png" class="thumbnail-image card-img" style="height: 150px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Geospatial Hands On Exercise 1
+</h5>
+<div class="card-subtitle listing-subtitle">
+Using Static, Interactive and Statistical (SIS) Graphs to reveal the demographics and relationships of a city.
+</div>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('geospatial'); return false;">
+geospatial
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('tmap'); return false;">
+tmap
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('sf'); return false;">
+sf
+</div>
+</div>
+<div class="card-attribution card-text-small justify">
+<div class="listing-author">
+Ong Zhi Rong Jordan
+</div>
+<div class="listing-date">
+November 19, 2022
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+<div class="g-col-1" data-index="1" data-categories="tibble,ggstatsplot" data-listing-date-sort="1654617600000" data-listing-file-modified-sort="1668655860998" data-listing-reading-time-sort="10.395">
+<a href="./posts/Me/SIS Representation/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img src="./posts/Me/SIS Representation/graphs.png" class="thumbnail-image card-img" style="height: 150px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+SIS Visual Representation
+</h5>
+<div class="card-subtitle listing-subtitle">
+Using Static, Interactive and Statistical (SIS) Graphs to reveal the demographics and relationships of a city.
+</div>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('tibble'); return false;">
+tibble
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('ggstatsplot'); return false;">
+ggstatsplot
+</div>
+</div>
+<div class="card-attribution card-text-small justify">
+<div class="listing-author">
+Ong Zhi Rong Jordan
+</div>
+<div class="listing-date">
+June 8, 2022
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+<div class="listing-no-matching d-none">
+No matching items
+</div>
+</div>
+<p><a href="../posts/index.html"> <button type="button" class="btn btn-primary float-end btn-sm">See all</button></a></p>
+<p><br></p>
+</section>
+<section id="posts-of-my-own-works" class="level2">
+<h2 class="anchored" data-anchor-id="posts-of-my-own-works">Posts of my own works</h2>
+<div id="listing-posts-me" class="quarto-listing quarto-listing-container-default">
 <div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="geospatial,tmap,sf" data-listing-date-sort="1668787200000" data-listing-file-modified-sort="1668820999537" data-listing-reading-time-sort="9.195">
+<div class="quarto-post image-right" data-index="0" data-categories="tibble,ggstatsplot" data-listing-date-sort="1654617600000" data-listing-file-modified-sort="1668655860998" data-listing-reading-time-sort="10.395">
 <div class="thumbnail">
-<p><a href="./posts/Geospatial_HOE1/geospatial_hoe1.html"> <img src="./posts/Geospatial_HOE1/geomap.png" class="thumnail-image"> </a></p>
+<p><a href="./posts/Me/SIS Representation/index.html"> <img src="./posts/Me/SIS Representation/graphs.png" class="thumnail-image"> </a></p>
 </div>
 <div class="body">
-<a href="./posts/Geospatial_HOE1/geospatial_hoe1.html">
+<a href="./posts/Me/SIS Representation/index.html">
+<h3 class="no-anchor listing-title">
+SIS Visual Representation
+</h3>
+<div class="listing-subtitle">
+Using Static, Interactive and Statistical (SIS) Graphs to reveal the demographics and relationships of a city.
+</div>
+</a>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('tibble'); return false;">
+tibble
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('ggstatsplot'); return false;">
+ggstatsplot
+</div>
+</div>
+<a href="./posts/Me/SIS Representation/index.html"> </a>
+</div>
+<div class="metadata">
+<a href="./posts/Me/SIS Representation/index.html">
+<div class="listing-date">
+June 8, 2022
+</div>
+<div class="listing-author">
+Ong Zhi Rong Jordan
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class="listing-no-matching d-none">
+No matching items
+</div>
+</div>
+<p><a href="../posts/me.html"> <button type="button" class="btn btn-primary float-end btn-sm">See all posts of my work</button></a></p>
+</section>
+<section id="posts-from-geospatial-analytics" class="level2">
+<h2 class="anchored" data-anchor-id="posts-from-geospatial-analytics">Posts from Geospatial Analytics</h2>
+<div id="listing-posts-geo" class="quarto-listing quarto-listing-container-default">
+<div class="list quarto-listing-default">
+<div class="quarto-post image-right" data-index="0" data-categories="geospatial,tmap,sf" data-listing-date-sort="1668787200000" data-listing-file-modified-sort="1668926249166" data-listing-reading-time-sort="9.195">
+<div class="thumbnail">
+<p><a href="./posts/Geo/Geospatial_HOE1/index.html"> <img src="./posts/Geo/Geospatial_HOE1/geomap.png" class="thumnail-image"> </a></p>
+</div>
+<div class="body">
+<a href="./posts/Geo/Geospatial_HOE1/index.html">
 <h3 class="no-anchor listing-title">
 Geospatial Hands On Exercise 1
 </h3>
@@ -173,46 +406,12 @@ tmap
 sf
 </div>
 </div>
-<a href="./posts/Geospatial_HOE1/geospatial_hoe1.html"> </a>
+<a href="./posts/Geo/Geospatial_HOE1/index.html"> </a>
 </div>
 <div class="metadata">
-<a href="./posts/Geospatial_HOE1/geospatial_hoe1.html">
+<a href="./posts/Geo/Geospatial_HOE1/index.html">
 <div class="listing-date">
 November 19, 2022
-</div>
-<div class="listing-author">
-Ong Zhi Rong Jordan
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="tibble,ggstatsplot" data-listing-date-sort="1654617600000" data-listing-file-modified-sort="1668775349558" data-listing-reading-time-sort="10.395">
-<div class="thumbnail">
-<p><a href="./posts/SIS Representation/SISRepresentation.html"> <img src="./posts/SIS Representation/graphs.png" class="thumnail-image"> </a></p>
-</div>
-<div class="body">
-<a href="./posts/SIS Representation/SISRepresentation.html">
-<h3 class="no-anchor listing-title">
-SIS Visual Representation
-</h3>
-<div class="listing-subtitle">
-Using Static, Interactive and Statistical (SIS) Graphs to reveal the demographics and relationships of a city.
-</div>
-</a>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('tibble'); return false;">
-tibble
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('ggstatsplot'); return false;">
-ggstatsplot
-</div>
-</div>
-<a href="./posts/SIS Representation/SISRepresentation.html"> </a>
-</div>
-<div class="metadata">
-<a href="./posts/SIS Representation/SISRepresentation.html">
-<div class="listing-date">
-June 8, 2022
 </div>
 <div class="listing-author">
 Ong Zhi Rong Jordan
@@ -224,7 +423,26 @@ Ong Zhi Rong Jordan
 <div class="listing-no-matching d-none">
 No matching items
 </div>
-</div></main> <!-- /main -->
+</div>
+<p><a href="../posts/geo.html"> <button type="button" class="btn btn-primary float-end btn-sm">See all posts of Geospatial</button></a></p>
+</section>
+<section id="posts-from-visual-analytics" class="level2">
+<h2 class="anchored" data-anchor-id="posts-from-visual-analytics">Posts from Visual Analytics</h2>
+<div id="listing-posts-visual" class="quarto-listing quarto-listing-container-default">
+<div class="list quarto-listing-default">
+
+</div>
+<div class="listing-no-matching d-none">
+No matching items
+</div>
+</div>
+<p><a href="../posts/visual.html"> <button type="button" class="btn btn-primary float-end btn-sm">See all posts of Visual</button></a></p>
+
+
+
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
