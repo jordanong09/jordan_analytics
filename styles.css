@@ -2,6 +2,26 @@
 
 /* @import url(https://use.fontawesome.com/releases/v6.1.1/css/all.css); */
 
+main, p{
+  font-size: 1.1rem !important;
+}
+
+.callout.callout-style-default .callout-body {
+    font-size: 1.2rem;
+    font-weight: 400;
+}
+
+:root {
+    --bs-blue: #9172be;
+    --bs-primary: #eb6864;
+}
+
+div.quarto-post .thumbnail img {
+    width: 100%;
+    object-fit: contain;
+    max-height: 150px;
+}
+
 .navbar-dark {
     background-color: var(--bs-blue);
 }
@@ -85,8 +105,8 @@ div.quarto-about-trestles .about-entity .about-link:hover {
 
 .btn-primary:hover {
   color: #000;
-  background-color: #f0f1ff;
-  border-color: #f0f1ff;
+  background-color: #ed6815;
+  border-color: #ed6815;
   padding: .375rem .75rem;
   font-size: 1.1rem !important;
   margin-top: -9px;

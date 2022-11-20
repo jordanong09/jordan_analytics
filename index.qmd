@@ -1,5 +1,4 @@
 ---
-title: "Jordan OZR"
 listing:
   - id: posts-me
     contents: posts/Me/**/*.qmd
