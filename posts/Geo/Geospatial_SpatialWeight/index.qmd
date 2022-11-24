@@ -191,8 +191,8 @@ The summary report shows that the largest first nearest neighbour distance is 58
 Now, we will compute the distance weight matrix by using *dnearneigh()* as shown in the code chunk below.
 
 ```{r}
-wm_d62 <- dnearneigh(coords, 0, 59)
-wm_d62
+wm_d59 <- dnearneigh(coords, 0, 59)
+wm_d59
 ```
 
 The report shows that on average, every area should have at least 3 neighbours (links).
@@ -200,7 +200,7 @@ The report shows that on average, every area should have at least 3 neighbours (
 To display the structure of the weight matrix is to combine [*table()*](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/table) and [*card()*](https://r-spatial.github.io/spdep/reference/card.html) of spdep.
 
 ```{r}
-head(table(hunan$County, card(wm_d62)),10)
+head(table(hunan$County, card(wm_d59)),10)
 ```
 
 ### Visualising distance weight matrix
@@ -212,7 +212,7 @@ par(mfrow=c(1,2))
 plot(hunan$geometry, border="lightgrey", main="1st nearest neighbours")
 plot(k1, coords, add=TRUE, col="red", length=0.08)
 plot(hunan$geometry, border="lightgrey", main="Distance link")
-plot(wm_d62, coords, add=TRUE, pch = 19, cex = 0.6)
+plot(wm_d59, coords, add=TRUE, pch = 19, cex = 0.6)
 ```
 
 ### Adaptive distance weight matrix
