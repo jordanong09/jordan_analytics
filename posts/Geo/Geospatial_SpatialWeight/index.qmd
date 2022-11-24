@@ -2,7 +2,7 @@
 title: "Introduction to Spatial Weights and Application"
 subtitle: Computation of spatial weights using R. Understanding the spatial relationships that exist among the features in the dataset.
 author: "Ong Zhi Rong Jordan"
-date: 2022-11-23
+date: 2022-11-24
 categories:
   - geospatial
   - sf
@@ -56,7 +56,6 @@ hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
 hunan <- left_join(hunan,hunan2012)
 ```
 
-
 ```{r, echo = FALSE}
 hunan <- readRDS("data/rds/hunan.rds")
 ```
@@ -96,7 +95,7 @@ knitr::include_graphics("contiguity.png")
 
 Except in the simplest of circumstances, visual examination or manual calculation cannot be used to create the spatial weights from the geometry of the data. It is necessary to utilize explicit spatial data structures to deal with the placement and layout of the polygons in order to determine whether two polygons are contiguous.
 
-We will use the [`poly2nb`](https://www.rdocumentation.org/packages/spdep/versions/1.2-7/topics/poly2nb) function to construct neighbours list based on the regions with contiguous boundaries. Based on the documentation, user will be able to pass a `queen` argument that takes in True or False. The argument the default is set to TRUE, that is, if you don’t specify queen = FALSE this function will return a list of first order neighbours using the Queen criteria.
+We will use the [`poly2nb`](https://www.rdocumentation.org/packages/spdep/versions/1.2-7/topics/poly2nb) function to construct neighbours list based on the regions with contiguous boundaries. Based on the documentation, user will be able to pass a `queen` argument that takes in True or False. The argument the default is set to TRUE, that is, if you don't specify queen = FALSE this function will return a list of first order neighbours using the Queen criteria.
 
 ### Computing (QUEEN) contiguity based neighbour
 
@@ -129,7 +128,7 @@ We can retrieve the GDPPC of these five countries by using the code chunk below.
 hunan$GDPPC[wm_q[[1]]]
 ```
 
-The printed output above shows that the GDPPC of the five nearest neighbours based on Queen’s method are 20981, 34592, 24473, 21311 and 22879 respectively.
+The printed output above shows that the GDPPC of the five nearest neighbours based on Queen's method are 20981, 34592, 24473, 21311 and 22879 respectively.
 
 You can display the complete weight matrix by using str().
 
@@ -150,13 +149,14 @@ The summary report above shows that there are 88 area units in Hunan. The most c
 
 ### Visualising the weights matrix
 
-A connectivity graph takes a point and displays a line to each neighboring point. We are working with polygons at the moment, so we will need to get points in order to make our connectivity graphs. The most typically method for this will be polygon centroids. To retrieve the centroid of each area, we will use the `st_centroid` function. 
+A connectivity graph takes a point and displays a line to each neighboring point. We are working with polygons at the moment, so we will need to get points in order to make our connectivity graphs. The most typically method for this will be polygon centroids. To retrieve the centroid of each area, we will use the `st_centroid` function.
 
 ```{r}
 coords <- st_centroid(st_geometry(hunan))
 ```
 
 #### Plotting Queen and Rook contiguity based neighbours map
+
 ```{r, fig.align='center'}
 par(mfrow=c(1,2))
 
@@ -167,3 +167,113 @@ plot(st_geometry(hunan), border="grey", main = "Rook Contiguity")
 plot(wm_r, coords,pch = 19, cex = 0.6, add = TRUE, col= "blue")
 ```
 
+## Computing distance based neighbours
+
+In this section, you will learn how to derive distance-based weight matrices by using [`dnearneigh()`](https://r-spatial.github.io/spdep/reference/dnearneigh.html) of **spdep** package. The function identifies neighbours of region points by Euclidean distance in the metric of the points between lower (greater than or equal to and upper (less than or equal to) bounds.
+
+### Determine the cut-off distance
+
+Firstly, we need to determine the upper limit for distance band by using the steps below:
+
+-   Return a matrix with the indices of points belonging to the set of the k nearest neighbours of each other by using [*knearneigh()*](https://r-spatial.github.io/spdep/reference/knearneigh.html) of **spdep**.
+
+-   Convert the knn object returned by *knearneigh()* into a neighbours list of class nb with a list of integer vectors containing neighbour region number ids by using [*knn2nb()*](https://r-spatial.github.io/spdep/reference/knn2nb.html).
+
+-   Return the length of neighbour relationship edges by using [*nbdists()*](https://r-spatial.github.io/spdep/reference/nbdists.html) of **spdep**. The function returns in the units of the coordinates if the coordinates are projected, in km otherwise.
+
+-   Remove the list structure of the returned object by using [**unlist()**](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/unlist).
+
+```{r}
+k1 <- knn2nb(knearneigh(coords))
+k1dists <- unlist(nbdists(k1, coords))
+summary(k1dists)
+```
+
+The summary report shows that the largest first nearest neighbour distance is 58.25 km, so using this as the upper threshold gives certainty that all units will have at least one neighbour.
+
+### Computing fixed distance weight matrix
+
+Now, we will compute the distance weight matrix by using *dnearneigh()* as shown in the code chunk below.
+
+```{r}
+wm_d62 <- dnearneigh(coords, 0, 59)
+wm_d62
+```
+
+The report shows that on average, every area should have at least 3 neighbours (links).
+
+To display the structure of the weight matrix is to combine [*table()*](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/table) and [*card()*](https://r-spatial.github.io/spdep/reference/card.html) of spdep.
+
+```{r}
+table(hunan$County, card(wm_d62))
+```
+
+### Visualising distance weight matrix
+
+The left graph with the red lines show the links of 1st nearest neighbours and the right graph with the black lines show the links of neighbours within the cut-off distance of 59km.
+
+```{r}
+par(mfrow=c(1,2))
+plot(hunan$geometry, border="lightgrey", main="1st nearest neighbours")
+plot(k1, coords, add=TRUE, col="red", length=0.08)
+plot(hunan$geometry, border="lightgrey", main="Distance link")
+plot(wm_d62, coords, add=TRUE, pch = 19, cex = 0.6)
+```
+
+### Adaptive distance weight matrix
+
+Other than using distance as a criteria to decide the neighbours, it is possible to control the numbers of neighbours directly using k-nearest neighbours, either accepting asymmetric neighbours or imposing symmetry as shown in the code chunk below:
+
+```{r}
+knn6 <- knn2nb(knearneigh(coords, k=6)) #k refers to the number of neighbours per area
+knn6
+```
+
+#### Plotting adaptive distance weight
+
+We can plot the adaptive distance weight matrix using the code chunk below:
+
+```{r}
+plot(hunan$geometry, border="lightgrey", main = "Adaptive Distance Weight")
+plot(knn6, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
+```
+
+### Weights based on Inversed Distance Weighting (IDW)
+
+In this section, you will learn how to derive a spatial weight matrix based on Inversed Distance method.
+
+First, we will compute the distances between areas by using *nbdists()* of **spdep**.
+
+We will use the [`lapply()`] (https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/lapply) to apply the inverse function through the list.
+
+```{r}
+dist <- nbdists(wm_q, coords, longlat = TRUE)
+ids <- lapply(dist, function(x) 1/(x))
+head(ids,5)
+```
+
+Next, we will use the [`nb2listw`](https://www.rdocumentation.org/packages/spdep/versions/1.2-7/topics/nb2listw) to apply the weights list with values given by the coding scheme style chosen. There are multiple style to choose from:
+
+-   B (Basic Binary Coding)
+-   W (Row Standardised) - sums over all links to n
+-   C (Globally Standardised) - sums over all links to n
+-   U (Globally Standardised / No of neighbours) - sums over all links to unity
+-   S (Variance-Stabilizing Coding Scheme) - sums over all links to n
+-   minmax - divides the weights by the minimum of the maximum row sums and maximum column sums of the input weights
+
+For the simplifed analysis, we will use the W (Row Standardised).
+
+```{r}
+rswm_q <- nb2listw(wm_q, style="W", zero.policy = TRUE)
+rswm_q
+```
+
+From the earlier example, we know that the first Id has 5 neighbours. We take a look at the weight distribution of these 5 neighours. Since we are using Row Standardised, they should be equal.
+
+```{r}
+rswm_q$weights[1]
+```
+
+Each neighbor is assigned a 0.2 of the total weight. This means that when R computes the average neighboring income values, each neighbor’s income will be multiplied by 0.2 before being tallied.
+
+##  Application of Spatial Weight Matrix
