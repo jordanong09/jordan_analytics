@@ -30,9 +30,7 @@ For this analysis, we will use the following packages from CRAN.
 -   [`spdep`](https://cran.r-project.org/web/packages/spdep/index.html) - A collection of functions to create spatial weights matrix objects from polygon 'contiguities', from point patterns by distance and tessellations, for summarizing these objects, and for permitting their use in spatial data analysis, including regional aggregation by minimum spanning tree; a collection of tests for spatial 'autocorrelation'
 
 ```{r}
-
 pacman::p_load(sf, spdep, tmap, tidyverse)
-
 ```
 
 ## Data Preparation
@@ -65,7 +63,6 @@ hunan <- readRDS("data/rds/hunan.rds")
 For the visualisation, we will only be using `tmap`. We will prepare a basemap anbd a choropleth map to visualise the distribution of GDP per capita among the capital.
 
 ```{r, eval=FALSE}
-
 basemap <- tm_shape(hunan) +
   tm_polygons() +
   tm_text("NAME_3", size=0.4)
@@ -73,8 +70,6 @@ basemap <- tm_shape(hunan) +
 gdppc <- qtm(hunan, "GDPPC")
 
 tmap_arrange(basemap, gdppc, asp=1, ncol=2)
-
-
 ```
 
 ```{r, echo = FALSE, fig.align='center', fig.cap="base map and choropleth map"}
@@ -205,7 +200,7 @@ The report shows that on average, every area should have at least 3 neighbours (
 To display the structure of the weight matrix is to combine [*table()*](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/table) and [*card()*](https://r-spatial.github.io/spdep/reference/card.html) of spdep.
 
 ```{r}
-table(hunan$County, card(wm_d62))
+head(table(hunan$County, card(wm_d62)),10)
 ```
 
 ### Visualising distance weight matrix
@@ -306,7 +301,6 @@ $$(20981+34592+24473+21311+22879/5 = 24847.20)$$
 
 We will now append these lagged values to our `Hunan` data frame.
 
-
 ```{r}
 
 lag.df <- as.data.frame(list(hunan$NAME_3,GDPPC.lag))
@@ -361,6 +355,7 @@ hunan <- left_join(hunan, lag_df)
 lag_df
 
 ```
+
 From the above data table and the GDPPC from the previous section, we know that the lagged sum is the addition of all the GDPPC of its neighbours.
 
 $$(20981+34592+24473+21311+22879 = 124236)$$
@@ -391,8 +386,7 @@ tmap_arrange(gdppc, lag_gdppc, lag_sum_gdppc, asp=1, ncol=3)
 knitr::include_graphics("tmap03.png")
 ```
 
-
-### Spatial window average
+### Spatial Window Average
 
 The spatial window average uses row-standardized weights and includes the diagonal element. (region itself) We will use the [`include.self()`](https://r-spatial.github.io/spdep/reference/include.self.html).
 
@@ -405,8 +399,8 @@ wm_q_self <- include.self(wm_q)
 We will now obtain the weight and retrieve the new spatial window average and combine it with our exisiting `Hunan` dataframe.
 
 ```{r}
-wm_q_self <- nb2listw(wm_q_self)
-lag_w_avg_gpdpc <- lag.listw(wm_q_self, 
+wm_q_self_list <- nb2listw(wm_q_self)
+lag_w_avg_gpdpc <- lag.listw(wm_q_self_list, 
                              hunan$GDPPC)
 
 lag_w_avg_df <- as.data.frame(list(hunan$NAME_3, lag_w_avg_gpdpc))
@@ -439,13 +433,74 @@ lag_sum_gdppc <- tm_shape(hunan) +
 lag_sum_avg_gdppc <- tm_shape(hunan) +
   tm_fill("lag_window_avg GDPPC") +
   tm_borders(alpha = 0.5) +
-  tm_layout(main.title = "GDPPC with lagged sum average values", main.title.size = 0.7, legend.text.size = 0.4,
+  tm_layout(main.title = "GDPPC with lagged average values", main.title.size = 0.7, legend.text.size = 0.4,
             main.title.fontface = "bold",main.title.position = "center")
 
 tmap_arrange(gdppc, lag_gdppc, lag_sum_gdppc, lag_sum_avg_gdppc, asp=1, ncol=2)
 
 ```
 
-```{r, echo = FALSE, fig.align='center', fig.cap="GDPPC vs lag GDPPC vs lag sum GDPPC vs lag sum avg GDPPC"}
+```{r, echo = FALSE, fig.align='center', fig.cap="GDPPC vs lag GDPPC vs lag sum GDPPC vs lag avg GDPPC"}
 knitr::include_graphics("tmap04.png")
 ```
+
+#### Spatial Window Sum
+
+The spatial Window sum is similar to the window average but using the binary weights. Therefore we will repeat the following steps of the `Spatial lag as a sum of neighboring values` and to include its own region.
+
+```{r}
+b_weights <- lapply(wm_q_self, function(x) 0*x + 1)
+b_weights[1]
+```
+
+From the result, we can see now the first area instead of **5** neighbours, it has **6** neighbours which include itself.
+We will now retrieve the spatial window sum and combine it with our exisiting `Hunan` dataframe.
+
+```{r}
+b_weights2 <- nb2listw(wm_q_self, 
+                       glist = b_weights, 
+                       style = "B")
+w_sum_gdppc_df <- as.data.frame(list(hunan$NAME_3, lag.listw(b_weights2, hunan$GDPPC)))
+colnames(w_sum_gdppc_df) <- c("NAME_3", "w_sum GDPPC")
+
+hunan <- left_join(hunan, w_sum_gdppc_df)
+```
+
+We will now visualise all the plots we created and visualise the difference in each method (excluding the original GDPPC).
+
+```{r, eval = FALSE}
+
+lag_gdppc <- tm_shape(hunan) +
+  tm_fill("lag GDPPC") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "GDPPC with lagged values", main.title.size = 0.7, legend.text.size = 0.4,
+            main.title.fontface = "bold",main.title.position = "center")
+
+lag_sum_gdppc <- tm_shape(hunan) +
+  tm_fill("lag_sum GDPPC") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "GDPPC with lagged sum values", main.title.size = 0.7, legend.text.size = 0.4,
+            main.title.fontface = "bold",main.title.position = "center")
+
+lag_sum_avg_gdppc <- tm_shape(hunan) +
+  tm_fill("lag_window_avg GDPPC") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "GDPPC with lagged average values", main.title.size = 0.7, legend.text.size = 0.4,
+            main.title.fontface = "bold",main.title.position = "center")
+
+lag_sum_window_gdppc <- tm_shape(hunan) +
+  tm_fill("w_sum GDPPC") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "GDPPC with lagged sum average values", main.title.size = 0.7, legend.text.size = 0.4,
+            main.title.fontface = "bold",main.title.position = "center")
+
+tmap_arrange(lag_gdppc, lag_sum_gdppc, lag_sum_avg_gdppc, lag_sum_window_gdppc, asp=1, ncol=2)
+```
+
+```{r, echo = FALSE, fig.align='center', fig.cap="lag GDPPC vs lag sum GDPPC vs lag avg GDPPC vs lag sum avg GDPPC"}
+knitr::include_graphics("tmap05.png")
+```
+
+## Conclusion
+
+This study allow us to understand the different contiguity spatial weights and different methods to utilise the neighbours information. There is no best method but which method suits your analysis of your work. 

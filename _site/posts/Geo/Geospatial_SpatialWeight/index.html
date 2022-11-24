@@ -188,9 +188,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <ul class="collapse">
 <li><a href="#spatial-lag-with-row-standardized-weights" id="toc-spatial-lag-with-row-standardized-weights" class="nav-link" data-scroll-target="#spatial-lag-with-row-standardized-weights">Spatial lag with row-standardized weights</a></li>
   <li><a href="#spatial-lag-as-a-sum-of-neighboring-values" id="toc-spatial-lag-as-a-sum-of-neighboring-values" class="nav-link" data-scroll-target="#spatial-lag-as-a-sum-of-neighboring-values">Spatial lag as a sum of neighboring values</a></li>
-  <li><a href="#spatial-window-average" id="toc-spatial-window-average" class="nav-link" data-scroll-target="#spatial-window-average">Spatial window average</a></li>
+  <li><a href="#spatial-window-average" id="toc-spatial-window-average" class="nav-link" data-scroll-target="#spatial-window-average">Spatial Window Average</a></li>
   </ul>
 </li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
   </ul></nav>
     </div>
 <!-- main -->
@@ -526,98 +527,20 @@ Average number of links: 3.386364 </code></pre>
 <p>The report shows that on average, every area should have at least 3 neighbours (links).</p>
 <p>To display the structure of the weight matrix is to combine <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/table"><em>table()</em></a> and <a href="https://r-spatial.github.io/spdep/reference/card.html"><em>card()</em></a> of spdep.</p>
 <div class="cell">
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span>, <span class="fu">card</span><span class="op">(</span><span class="va">wm_d62</span><span class="op">)</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span>, <span class="fu">card</span><span class="op">(</span><span class="va">wm_d62</span><span class="op">)</span><span class="op">)</span>,<span class="fl">10</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>               
-                1 2 3 4 5 6
-  Anhua         1 0 0 0 0 0
-  Anren         0 0 0 1 0 0
-  Anxiang       0 0 0 0 1 0
-  Baojing       0 0 0 1 0 0
-  Chaling       0 0 1 0 0 0
-  Changning     0 0 1 0 0 0
-  Changsha      0 0 0 1 0 0
-  Chengbu       1 0 0 0 0 0
-  Chenxi        0 0 0 1 0 0
-  Cili          1 0 0 0 0 0
-  Dao           0 0 1 0 0 0
-  Dongan        0 0 1 0 0 0
-  Dongkou       0 0 0 1 0 0
-  Fenghuang     0 0 0 1 0 0
-  Guidong       0 0 1 0 0 0
-  Guiyang       0 0 1 0 0 0
-  Guzhang       0 0 0 0 0 1
-  Hanshou       0 0 0 1 0 0
-  Hengdong      0 0 1 0 0 0
-  Hengnan       0 0 0 0 1 0
-  Hengshan      0 0 0 0 0 1
-  Hengyang      0 0 0 0 1 0
-  Hongjiang     0 0 0 1 0 0
-  Huarong       0 0 1 0 0 0
-  Huayuan       0 0 0 1 0 0
-  Huitong       0 0 0 1 0 0
-  Jiahe         0 0 0 0 1 0
-  Jianghua      0 1 0 0 0 0
-  Jiangyong     0 1 0 0 0 0
-  Jingzhou      0 1 0 0 0 0
-  Jinshi        0 0 0 1 0 0
-  Jishou        0 0 0 0 0 1
-  Lanshan       0 0 0 1 0 0
-  Leiyang       0 0 0 1 0 0
-  Lengshuijiang 0 0 1 0 0 0
-  Li            0 0 1 0 0 0
-  Lianyuan      0 0 0 1 0 0
-  Liling        0 1 0 0 0 0
-  Linli         0 0 1 0 0 0
-  Linwu         0 0 0 1 0 0
-  Linxiang      1 0 0 0 0 0
-  Liuyang       0 1 0 0 0 0
-  Longhui       0 0 1 0 0 0
-  Longshan      1 0 0 0 0 0
-  Luxi          0 0 0 0 1 0
-  Mayang        0 0 0 0 0 1
-  Miluo         0 0 0 0 1 0
-  Nan           0 0 0 0 1 0
-  Ningxiang     0 0 0 1 0 0
-  Ningyuan      0 0 0 0 1 0
-  Pingjiang     0 1 0 0 0 0
-  Qidong        0 0 1 0 0 0
-  Qiyang        0 0 1 0 0 0
-  Rucheng       0 1 0 0 0 0
-  Sangzhi       1 0 0 0 0 0
-  Shaodong      0 0 0 0 1 0
-  Shaoshan      0 0 0 1 0 0
-  Shaoyang      0 0 0 1 0 0
-  Shimen        1 0 0 0 0 0
-  Shuangfeng    0 0 0 0 1 0
-  Shuangpai     0 0 0 1 0 0
-  Suining       0 0 0 1 0 0
-  Taojiang      0 1 0 0 0 0
-  Taoyuan       1 0 0 0 0 0
-  Tongdao       1 0 0 0 0 0
-  Wangcheng     0 0 0 1 0 0
-  Wugang        0 0 1 0 0 0
-  Xiangtan      0 0 0 1 0 0
-  Xiangxiang    0 0 0 0 1 0
-  Xiangyin      0 0 0 1 0 0
-  Xinhua        0 0 0 1 0 0
-  Xinhuang      1 0 0 0 0 0
-  Xinning       0 1 0 0 0 0
-  Xinshao       0 0 0 0 0 1
-  Xintian       0 0 0 0 1 0
-  Xupu          0 1 0 0 0 0
-  Yanling       0 0 1 0 0 0
-  Yizhang       1 0 0 0 0 0
-  Yongshun      0 0 0 1 0 0
-  Yongxing      0 0 1 0 0 0
-  You           0 0 1 0 0 0
-  Yuanjiang     0 0 0 0 1 0
-  Yuanling      1 0 0 0 0 0
-  Yueyang       0 1 0 0 0 0
-  Zhijiang      0 0 0 0 1 0
-  Zhongfang     0 0 0 1 0 0
-  Zhuzhou       0 0 1 0 0 0
-  Zixing        0 0 1 0 0 0</code></pre>
+<pre><code>           
+            1 2 3 4 5 6
+  Anhua     1 0 0 0 0 0
+  Anren     0 0 0 1 0 0
+  Anxiang   0 0 0 0 1 0
+  Baojing   0 0 0 1 0 0
+  Chaling   0 0 1 0 0 0
+  Changning 0 0 1 0 0 0
+  Changsha  0 0 0 1 0 0
+  Chengbu   1 0 0 0 0 0
+  Chenxi    0 0 0 1 0 0
+  Cili      1 0 0 0 0 0</code></pre>
 </div>
 </div>
 </section><section id="visualising-distance-weight-matrix" class="level3"><h3 class="anchored" data-anchor-id="visualising-distance-weight-matrix">Visualising distance weight matrix</h3>
@@ -927,15 +850,15 @@ B 88 7744 448 896 10224</code></pre>
 </div>
 </div>
 </div>
-</section><section id="spatial-window-average" class="level3"><h3 class="anchored" data-anchor-id="spatial-window-average">Spatial window average</h3>
+</section><section id="spatial-window-average" class="level3"><h3 class="anchored" data-anchor-id="spatial-window-average">Spatial Window Average</h3>
 <p>The spatial window average uses row-standardized weights and includes the diagonal element. (region itself) We will use the <a href="https://r-spatial.github.io/spdep/reference/include.self.html"><code>include.self()</code></a>.</p>
 <div class="cell">
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">wm_q_self</span> <span class="op">&lt;-</span> <span class="fu">include.self</span><span class="op">(</span><span class="va">wm_q</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We will now obtain the weight and retrieve the new spatial window average and combine it with our exisiting <code>Hunan</code> dataframe.</p>
 <div class="cell">
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">wm_q_self</span> <span class="op">&lt;-</span> <span class="fu">nb2listw</span><span class="op">(</span><span class="va">wm_q_self</span><span class="op">)</span>
-<span class="va">lag_w_avg_gpdpc</span> <span class="op">&lt;-</span> <span class="fu">lag.listw</span><span class="op">(</span><span class="va">wm_q_self</span>, 
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">wm_q_self_list</span> <span class="op">&lt;-</span> <span class="fu">nb2listw</span><span class="op">(</span><span class="va">wm_q_self</span><span class="op">)</span>
+<span class="va">lag_w_avg_gpdpc</span> <span class="op">&lt;-</span> <span class="fu">lag.listw</span><span class="op">(</span><span class="va">wm_q_self_list</span>, 
                              <span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span><span class="op">)</span>
 
 <span class="va">lag_w_avg_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">NAME_3</span>, <span class="va">lag_w_avg_gpdpc</span><span class="op">)</span><span class="op">)</span>
@@ -966,7 +889,7 @@ B 88 7744 448 896 10224</code></pre>
 <span class="va">lag_sum_avg_gdppc</span> <span class="op">&lt;-</span> <span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_fill</span><span class="op">(</span><span class="st">"lag_window_avg GDPPC"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_borders</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">tm_layout</span><span class="op">(</span>main.title <span class="op">=</span> <span class="st">"GDPPC with lagged sum average values"</span>, main.title.size <span class="op">=</span> <span class="fl">0.7</span>, legend.text.size <span class="op">=</span> <span class="fl">0.4</span>,
+  <span class="fu">tm_layout</span><span class="op">(</span>main.title <span class="op">=</span> <span class="st">"GDPPC with lagged average values"</span>, main.title.size <span class="op">=</span> <span class="fl">0.7</span>, legend.text.size <span class="op">=</span> <span class="fl">0.4</span>,
             main.title.fontface <span class="op">=</span> <span class="st">"bold"</span>,main.title.position <span class="op">=</span> <span class="st">"center"</span><span class="op">)</span>
 
 <span class="fu">tmap_arrange</span><span class="op">(</span><span class="va">gdppc</span>, <span class="va">lag_gdppc</span>, <span class="va">lag_sum_gdppc</span>, <span class="va">lag_sum_avg_gdppc</span>, asp<span class="op">=</span><span class="fl">1</span>, ncol<span class="op">=</span><span class="fl">2</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -975,14 +898,73 @@ B 88 7744 448 896 10224</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="tmap04.png" class="img-fluid figure-img" width="1800"></p>
-<p></p><figcaption class="figure-caption">GDPPC vs lag GDPPC vs lag sum GDPPC vs lag sum avg GDPPC</figcaption><p></p>
+<p></p><figcaption class="figure-caption">GDPPC vs lag GDPPC vs lag sum GDPPC vs lag avg GDPPC</figcaption><p></p>
 </figure>
 </div>
 </div>
 </div>
+<section id="spatial-window-sum" class="level4"><h4 class="anchored" data-anchor-id="spatial-window-sum">Spatial Window Sum</h4>
+<p>The spatial Window sum is similar to the window average but using the binary weights. Therefore we will repeat the following steps of the <code>Spatial lag as a sum of neighboring values</code> and to include its own region.</p>
+<div class="cell">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">b_weights</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">wm_q_self</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fl">0</span><span class="op">*</span><span class="va">x</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span>
+<span class="va">b_weights</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1] 1 1 1 1 1 1</code></pre>
+</div>
+</div>
+<p>From the result, we can see now the first area instead of <strong>5</strong> neighbours, it has <strong>6</strong> neighbours which include itself. We will now retrieve the spatial window sum and combine it with our exisiting <code>Hunan</code> dataframe.</p>
+<div class="cell">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">b_weights2</span> <span class="op">&lt;-</span> <span class="fu">nb2listw</span><span class="op">(</span><span class="va">wm_q_self</span>, 
+                       glist <span class="op">=</span> <span class="va">b_weights</span>, 
+                       style <span class="op">=</span> <span class="st">"B"</span><span class="op">)</span>
+<span class="va">w_sum_gdppc_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">NAME_3</span>, <span class="fu">lag.listw</span><span class="op">(</span><span class="va">b_weights2</span>, <span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">w_sum_gdppc_df</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NAME_3"</span>, <span class="st">"w_sum GDPPC"</span><span class="op">)</span>
+
+<span class="va">hunan</span> <span class="op">&lt;-</span> <span class="fu">left_join</span><span class="op">(</span><span class="va">hunan</span>, <span class="va">w_sum_gdppc_df</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We will now visualise all the plots we created and visualise the difference in each method (excluding the original GDPPC).</p>
+<div class="cell">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">lag_gdppc</span> <span class="op">&lt;-</span> <span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_fill</span><span class="op">(</span><span class="st">"lag GDPPC"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_borders</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_layout</span><span class="op">(</span>main.title <span class="op">=</span> <span class="st">"GDPPC with lagged values"</span>, main.title.size <span class="op">=</span> <span class="fl">0.7</span>, legend.text.size <span class="op">=</span> <span class="fl">0.4</span>,
+            main.title.fontface <span class="op">=</span> <span class="st">"bold"</span>,main.title.position <span class="op">=</span> <span class="st">"center"</span><span class="op">)</span>
+
+<span class="va">lag_sum_gdppc</span> <span class="op">&lt;-</span> <span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_fill</span><span class="op">(</span><span class="st">"lag_sum GDPPC"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_borders</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_layout</span><span class="op">(</span>main.title <span class="op">=</span> <span class="st">"GDPPC with lagged sum values"</span>, main.title.size <span class="op">=</span> <span class="fl">0.7</span>, legend.text.size <span class="op">=</span> <span class="fl">0.4</span>,
+            main.title.fontface <span class="op">=</span> <span class="st">"bold"</span>,main.title.position <span class="op">=</span> <span class="st">"center"</span><span class="op">)</span>
+
+<span class="va">lag_sum_avg_gdppc</span> <span class="op">&lt;-</span> <span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_fill</span><span class="op">(</span><span class="st">"lag_window_avg GDPPC"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_borders</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_layout</span><span class="op">(</span>main.title <span class="op">=</span> <span class="st">"GDPPC with lagged average values"</span>, main.title.size <span class="op">=</span> <span class="fl">0.7</span>, legend.text.size <span class="op">=</span> <span class="fl">0.4</span>,
+            main.title.fontface <span class="op">=</span> <span class="st">"bold"</span>,main.title.position <span class="op">=</span> <span class="st">"center"</span><span class="op">)</span>
+
+<span class="va">lag_sum_window_gdppc</span> <span class="op">&lt;-</span> <span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_fill</span><span class="op">(</span><span class="st">"w_sum GDPPC"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_borders</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu">tm_layout</span><span class="op">(</span>main.title <span class="op">=</span> <span class="st">"GDPPC with lagged sum average values"</span>, main.title.size <span class="op">=</span> <span class="fl">0.7</span>, legend.text.size <span class="op">=</span> <span class="fl">0.4</span>,
+            main.title.fontface <span class="op">=</span> <span class="st">"bold"</span>,main.title.position <span class="op">=</span> <span class="st">"center"</span><span class="op">)</span>
+
+<span class="fu">tmap_arrange</span><span class="op">(</span><span class="va">lag_gdppc</span>, <span class="va">lag_sum_gdppc</span>, <span class="va">lag_sum_avg_gdppc</span>, <span class="va">lag_sum_window_gdppc</span>, asp<span class="op">=</span><span class="fl">1</span>, ncol<span class="op">=</span><span class="fl">2</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="tmap05.png" class="img-fluid figure-img" width="1800"></p>
+<p></p><figcaption class="figure-caption">lag GDPPC vs lag sum GDPPC vs lag avg GDPPC vs lag sum avg GDPPC</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+</section></section></section><section id="conclusion" class="level2"><h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>This study allow us to understand the different contiguity spatial weights and different methods to utilise the neighbours information. There is no best method but which method suits your analysis of your work.</p>
 
 
-</section></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
     const mode = bsSheetEl.getAttribute("data-mode");
