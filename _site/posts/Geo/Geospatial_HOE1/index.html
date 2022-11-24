@@ -125,7 +125,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <header id="quarto-header" class="headroom fixed-top"><nav class="navbar navbar-expand-lg navbar-dark "><div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
     <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
-    <img src="../../../media/geospatial.png" alt="" class="navbar-logo"></a>
+    <img src="../../../media/profile.png" alt="" class="navbar-logo"></a>
     <a class="navbar-brand" href="../../../index.html">
     <span class="navbar-title">Bringing Data to Life</span>
     </a>
@@ -158,7 +158,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
    
   <ul>
 <li><a href="#libraries" id="toc-libraries" class="nav-link active" data-scroll-target="#libraries">Libraries</a></li>
-  <li><a href="#dataset" id="toc-dataset" class="nav-link" data-scroll-target="#dataset">Dataset</a></li>
+  <li>
+<a href="#dataset" id="toc-dataset" class="nav-link" data-scroll-target="#dataset">Dataset</a>
+  <ul class="collapse">
+<li><a href="#extracting-geographical-information-from-dataset" id="toc-extracting-geographical-information-from-dataset" class="nav-link" data-scroll-target="#extracting-geographical-information-from-dataset">Extracting geographical information from Dataset</a></li>
+  </ul>
+</li>
   <li><a href="#plotting-of-map" id="toc-plotting-of-map" class="nav-link" data-scroll-target="#plotting-of-map">Plotting of map</a></li>
   <li><a href="#changing-of-projection" id="toc-changing-of-projection" class="nav-link" data-scroll-target="#changing-of-projection">Changing of Projection</a></li>
   <li><a href="#importing-and-converting-an-aspatial-data" id="toc-importing-and-converting-an-aspatial-data" class="nav-link" data-scroll-target="#importing-and-converting-an-aspatial-data">Importing and Converting An Aspatial Data</a></li>
@@ -200,10 +205,21 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   
 
 </header><section id="libraries" class="level2"><h2 class="anchored" data-anchor-id="libraries">Libraries</h2>
+<p>For this analysis, we will use the following packages from CRAN.</p>
+<p><a href="https://cloud.r-project.org/web/packages/sf/index.html"><code>sf</code></a> - Support for simple features, a standardized way to encode spatial vector data. Binds to ‘GDAL’ for reading and writing data, to ‘GEOS’ for geometrical operations, and to ‘PROJ’ for projection conversions and datum transformations. Uses by default the ‘s2’ package for spherical geometry operations on ellipsoidal (long/lat) coordinates. <a href="https://www.tidyverse.org/packages/"><code>tidyverse</code></a> - Loading the core tidyverse packages which will be used for data wrangling and visualisation. <a href="https://cran.r-project.org/web/packages/tmap/index.html"><code>tmap</code></a> - Thematic maps are geographical maps in which spatial data distributions are visualized. This package offers a flexible, layer-based, and easy to use approach to create thematic maps, such as choropleths and bubble maps.</p>
 <div class="cell">
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">pacman</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pacman/man/p_load.html">p_load</a></span><span class="op">(</span><span class="va">sf</span>, <span class="va">tidyverse</span>, <span class="va">tmap</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section><section id="dataset" class="level2"><h2 class="anchored" data-anchor-id="dataset">Dataset</h2>
+<p>For this analysis, we will extract data that is available from the web.</p>
+<ul>
+<li><p>Master Plan 2014 Subzone Boundary (Web) from <a href="data.gov.sg">data.gov.sg</a></p></li>
+<li><p>Pre-Schools Location from <a href="data.gov.sg">data.gov.sg</a></p></li>
+<li><p>Cycling Path from <a href="https://datamall.lta.gov.sg/content/datamall/en.html">LTADataMall</a></p></li>
+<li><p>Latest version of Singapore Airbnb listing data from <a href="http://insideairbnb.com/get-the-data/">Inside Airbnb</a></p></li>
+</ul>
+<section id="extracting-geographical-information-from-dataset" class="level3"><h3 class="anchored" data-anchor-id="extracting-geographical-information-from-dataset">Extracting geographical information from Dataset</h3>
+<p>We will leverage on the <a href="https://r-spatial.github.io/sf/reference/st_read.html"><code>st_read</code></a> function to retrieve <code>polygon</code>, <code>line</code> and <code>point</code> feature in both ESRI shapefile and KML format.</p>
 <div class="cell">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">mpsz</span> <span class="op">=</span> <span class="fu">st_read</span><span class="op">(</span>dsn <span class="op">=</span> <span class="st">"data/geospatial"</span>, 
                   layer <span class="op">=</span> <span class="st">"MP14_SUBZONE_WEB_PL"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -298,7 +314,7 @@ Projected CRS: SVY21
 5 30005.70   2825.594   387429.4 MULTIPOLYGON (((26451.03 30...</code></pre>
 </div>
 </div>
-</section><section id="plotting-of-map" class="level2"><h2 class="anchored" data-anchor-id="plotting-of-map">Plotting of map</h2>
+</section></section><section id="plotting-of-map" class="level2"><h2 class="anchored" data-anchor-id="plotting-of-map">Plotting of map</h2>
 <div class="cell">
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">mpsz</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">

@@ -4,19 +4,22 @@
     "items": [
       "/posts/Me/RFM/index.html",
       "/posts/Me/SIS Representation/index.html",
-      "/posts/Geo/Geospatial_HOE1/index.html"
+      "/posts/Geo/Geospatial_Choropleth/index.html",
+      "/posts/Geo/Geospatial_Datawrangling/index.html"
     ]
   },
   {
     "listing": "/posts/geo.html",
     "items": [
-      "/posts/Geo/Geospatial_HOE1/index.html"
+      "/posts/Geo/Geospatial_Choropleth/index.html",
+      "/posts/Geo/Geospatial_Datawrangling/index.html"
     ]
   },
   {
     "listing": "/posts/index.html",
     "items": [
-      "/posts/Geo/Geospatial_HOE1/index.html",
+      "/posts/Geo/Geospatial_Choropleth/index.html",
+      "/posts/Geo/Geospatial_Datawrangling/index.html",
       "/posts/Me/RFM/index.html",
       "/posts/Me/SIS Representation/index.html"
     ]

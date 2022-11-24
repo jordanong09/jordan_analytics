@@ -1,0 +1,169 @@
+---
+title: "Introduction to Spatial Weights and Application"
+subtitle: Computation of spatial weights using R. Understanding the spatial relationships that exist among the features in the dataset.
+author: "Ong Zhi Rong Jordan"
+date: 2022-11-23
+categories:
+  - geospatial
+  - sf
+  - spdep
+  - tmap
+image: "spatialweights.png"
+toc: true
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Libraries
+
+For this analysis, we will use the following packages from CRAN.
+
+-   [`sf`](https://cloud.r-project.org/web/packages/sf/index.html) - Support for simple features, a standardized way to encode spatial vector data. Binds to 'GDAL' for reading and writing data, to 'GEOS' for geometrical operations, and to 'PROJ' for projection conversions and datum transformations. Uses by default the 's2' package for spherical geometry operations on ellipsoidal (long/lat) coordinates.
+-   [`tidyverse`](https://www.tidyverse.org/packages/) - Loading the core tidyverse packages which will be used for data wrangling and visualisation.
+-   [`tmap`](https://cran.r-project.org/web/packages/tmap/index.html) - Thematic maps are geographical maps in which spatial data distributions are visualized. This package offers a flexible, layer-based, and easy to use approach to create thematic maps, such as choropleths and bubble maps.
+-   [`spdep`](https://cran.r-project.org/web/packages/spdep/index.html) - A collection of functions to create spatial weights matrix objects from polygon 'contiguities', from point patterns by distance and tessellations, for summarizing these objects, and for permitting their use in spatial data analysis, including regional aggregation by minimum spanning tree; a collection of tests for spatial 'autocorrelation'
+
+```{r}
+
+pacman::p_load(sf, spdep, tmap, tidyverse)
+
+```
+
+## Data Preparation
+
+Two dataset will be used for this study:
+
+-   Hunan.shp: A shapefile of the Hunan Province that consist of all the capital
+-   Hunan.csv: A csv file containing multiple attributes of each capital within Hunan
+
+### Importing of data
+
+We will use the *st_read* to import the shape file and *read_csv* to import the aspatial data into the R environment. We will then use a relational join *left_join* to combine the spatial and aspatial data together.
+
+```{r, eval = FALSE}
+hunan <- st_read(dsn = "data/geospatial", 
+                 layer = "Hunan")
+
+hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
+
+
+hunan <- left_join(hunan,hunan2012)
+```
+
+
+```{r, echo = FALSE}
+hunan <- readRDS("data/rds/hunan.rds")
+```
+
+## Visualisation of spatial data
+
+For the visualisation, we will only be using `tmap`. We will prepare a basemap anbd a choropleth map to visualise the distribution of GDP per capita among the capital.
+
+```{r, eval=FALSE}
+
+basemap <- tm_shape(hunan) +
+  tm_polygons() +
+  tm_text("NAME_3", size=0.4)
+
+gdppc <- qtm(hunan, "GDPPC")
+
+tmap_arrange(basemap, gdppc, asp=1, ncol=2)
+
+
+```
+
+```{r, echo = FALSE, fig.align='center', fig.cap="base map and choropleth map"}
+knitr::include_graphics("tmap01.png")
+```
+
+## Computing Contiguity Spatial Weights
+
+Contiguity means that two spatial units share a common border of non-zero length. There are multiple criterion of contiguity such as:
+
+-   **Rook**: When only common sides of the polygons are considered to define the neighbor relation (common vertices are ignored).
+-   **Queen**: The difference between the rook and queen criterion to determine neighbors is that the latter also includes common vertices.
+-   **Bishop**: Is based on the existence of common vertices between two spatial units.
+
+```{r, echo = FALSE, fig.align='center', fig.cap="Contiguity Weights"}
+knitr::include_graphics("contiguity.png")
+```
+
+Except in the simplest of circumstances, visual examination or manual calculation cannot be used to create the spatial weights from the geometry of the data. It is necessary to utilize explicit spatial data structures to deal with the placement and layout of the polygons in order to determine whether two polygons are contiguous.
+
+We will use the [`poly2nb`](https://www.rdocumentation.org/packages/spdep/versions/1.2-7/topics/poly2nb) function to construct neighbours list based on the regions with contiguous boundaries. Based on the documentation, user will be able to pass a `queen` argument that takes in True or False. The argument the default is set to TRUE, that is, if you don’t specify queen = FALSE this function will return a list of first order neighbours using the Queen criteria.
+
+### Computing (QUEEN) contiguity based neighbour
+
+The code chunk below is used to compute Queen contiguity weight matrix.
+
+```{r}
+wm_q <- poly2nb(hunan)
+summary(wm_q)
+```
+
+based on the summary report above,the report shows that there are 88 area units in Hunan. The most connected area unit has 11 neighbours. There are two area units with only one neighbours.
+
+For each polygon in our polygon object, wm_q lists all neighboring polygons. For example, to see the neighbors for the first polygon in the object, type:
+
+```{r}
+wm_q[[1]]
+```
+
+Polygon 1 has 5 neighbors. The numbers represent the polygon IDs as stored in hunan SpatialPolygonsDataFrame class.
+
+To reveal the county names of the five neighboring polygons, the code chunk will be used:
+
+```{r}
+hunan$NAME_3[c(2,3,4,57,85)]
+```
+
+We can retrieve the GDPPC of these five countries by using the code chunk below.
+
+```{r}
+hunan$GDPPC[wm_q[[1]]]
+```
+
+The printed output above shows that the GDPPC of the five nearest neighbours based on Queen’s method are 20981, 34592, 24473, 21311 and 22879 respectively.
+
+You can display the complete weight matrix by using str().
+
+```{r}
+str(wm_q)
+```
+
+### Computing (ROOK) contiguity based neighbour
+
+The code chunk below is used to compute Rook contiguity weight matrix.
+
+```{r}
+wm_r <- poly2nb(hunan, queen=FALSE)
+summary(wm_r)
+```
+
+The summary report above shows that there are 88 area units in Hunan. The most connect area unit has 10 neighbours. There are two area units with only one heighbours.
+
+### Visualising the weights matrix
+
+A connectivity graph takes a point and displays a line to each neighboring point. We are working with polygons at the moment, so we will need to get points in order to make our connectivity graphs. The most typically method for this will be polygon centroids. To retrieve the centroid of each area, we will use the `st_centroid` function. 
+
+```{r}
+coords <- st_centroid(st_geometry(hunan))
+```
+
+#### Plotting Queen and Rook contiguity based neighbours map
+```{r, fig.align='center'}
+par(mfrow=c(1,2))
+
+plot(st_geometry(hunan), border="grey", main = "Queen Contiguity")
+plot(wm_q, coords,pch = 19, cex = 0.6, add = TRUE, col= "red")
+
+plot(st_geometry(hunan), border="grey", main = "Rook Contiguity")
+plot(wm_r, coords,pch = 19, cex = 0.6, add = TRUE, col= "blue")
+```
+

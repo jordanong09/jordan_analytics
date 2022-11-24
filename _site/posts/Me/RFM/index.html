@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Ong Zhi Rong Jordan">
 <meta name="dcterms.date" content="2022-06-25">
-<title>Bringing Geographical Data to Life - RFM Model</title>
+<title>Bringing Data to Life - RFM Model</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -125,9 +125,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <header id="quarto-header" class="headroom fixed-top"><nav class="navbar navbar-expand-lg navbar-dark "><div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
     <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
-    <img src="../../../media/geospatial.png" alt="" class="navbar-logo"></a>
+    <img src="../../../media/profile.png" alt="" class="navbar-logo"></a>
     <a class="navbar-brand" href="../../../index.html">
-    <span class="navbar-title">Bringing Geographical Data to Life</span>
+    <span class="navbar-title">Bringing Data to Life</span>
     </a>
   </div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
@@ -366,14 +366,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 5010 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 11.2632
- - Box-Cox: 8.2449
- - Center+scale: 28.9884
+ - arcsinh(x): 11.1308
+ - Box-Cox: 8.203
+ - Center+scale: 28.4903
  - Exp(x): 22.7727
- - Log_b(x+a): 11.2478
- - orderNorm (ORQ): 1.2118
- - sqrt(x + a): 10.1503
- - Yeo-Johnson: 8.4653
+ - Log_b(x+a): 11.1712
+ - orderNorm (ORQ): 1.1137
+ - sqrt(x + a): 10.3142
+ - Yeo-Johnson: 8.3977
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -387,14 +387,14 @@ orderNorm Transformation with 5010 nonmissing obs and ties
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 5010 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 82.5693
- - Box-Cox: 83.245
- - Center+scale: 82.2217
+ - arcsinh(x): 82.7576
+ - Box-Cox: 83.2959
+ - Center+scale: 82.3867
  - Exp(x): 74.932
- - Log_b(x+a): 82.5422
- - orderNorm (ORQ): 82.2353
- - sqrt(x + a): 82.6168
- - Yeo-Johnson: 83.4307
+ - Log_b(x+a): 82.7547
+ - orderNorm (ORQ): 82.2905
+ - sqrt(x + a): 82.732
+ - Yeo-Johnson: 83.5991
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -407,13 +407,13 @@ Standardized exp(x) Transformation with 5010 nonmissing obs.:
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 5010 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 2.4477
- - Box-Cox: 1.8361
- - Center+scale: 20.5277
- - Log_b(x+a): 2.4527
- - orderNorm (ORQ): 1.1718
- - sqrt(x + a): 5.5001
- - Yeo-Johnson: 1.8335
+ - arcsinh(x): 2.4536
+ - Box-Cox: 1.7519
+ - Center+scale: 20.535
+ - Log_b(x+a): 2.4542
+ - orderNorm (ORQ): 1.1424
+ - sqrt(x + a): 5.4938
+ - Yeo-Johnson: 1.7558
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:

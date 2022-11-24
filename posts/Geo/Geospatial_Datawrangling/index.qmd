@@ -1,0 +1,240 @@
+---
+title: "Data Wrangling of Geospatial Data"
+subtitle: Utilising the sf and tidyverse packages to tidy geospatial data.
+author: "Ong Zhi Rong Jordan"
+date: 2022-11-19
+categories:
+  - geospatial
+  - sf
+image: "datawrangle.png"
+toc: true
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Libraries
+
+For this analysis, we will use the following packages from CRAN.
+
+-   [`sf`](https://cloud.r-project.org/web/packages/sf/index.html) - Support for simple features, a standardized way to encode spatial vector data. Binds to 'GDAL' for reading and writing data, to 'GEOS' for geometrical operations, and to 'PROJ' for projection conversions and datum transformations. Uses by default the 's2' package for spherical geometry operations on ellipsoidal (long/lat) coordinates.
+-   [`tidyverse`](https://www.tidyverse.org/packages/) - Loading the core tidyverse packages which will be used for data wrangling and visualisation.
+
+```{r}
+
+pacman::p_load(sf, tidyverse)
+
+```
+
+## Dataset
+
+For this analysis, we will extract data that is available from the web.
+
+-   Master Plan 2014 Subzone Boundary (Web) from [data.gov.sg](data.gov.sg)
+
+-   Pre-Schools Location from [data.gov.sg](data.gov.sg)
+
+-   Cycling Path from [LTADataMall](https://datamall.lta.gov.sg/content/datamall/en.html)
+
+-   Latest version of Singapore Airbnb listing data from [Inside Airbnb](http://insideairbnb.com/get-the-data/)
+
+### Extracting geographical information from Dataset
+
+We will leverage on the [`st_read`](https://r-spatial.github.io/sf/reference/st_read.html) function to retrieve `polygon`, `line` and `point` feature in both ESRI shapefile and KML format.
+
+The [`st_geometry`](https://r-spatial.github.io/sf/reference/st_geometry.html) function returns an object of class [`sfc`](https://r-spatial.github.io/sf/reference/sfc.html) whereas the [`glimpse`](https://dplyr.tidyverse.org/reference/glimpse.html) function from `dplyr` act as a transposed version of the `print` function that shows the values of the different columns.
+
+To check all the classes within the dataset, we use the `sapply` function to run the class function through all the columns within the data set and return their classes.
+
+```{r}
+
+mpsz <- st_read(dsn = "data/geospatial", 
+                  layer = "MP14_SUBZONE_WEB_PL")
+
+cyclingpath <- st_read(dsn = "data/geospatial", 
+                      layer = "CyclingPath")
+
+preschool <- st_read("data/geospatial/pre-schools-location-kml.kml")
+
+
+st_geometry(mpsz)
+glimpse(mpsz)
+sapply(mpsz, class)
+
+```
+
+## Plotting of geospatial data
+
+Unlike non-geospatial dataset where we plot the data using charts, we will leverage on map-based visualisation to draw insights from our geospatial data. The `plot` function uses the geometry data, contained primarily in the `polygons` slot. `plot` is one of the most useful functions in R, as it changes its behaviour depending on the input data. From the example below, we can see how we manipulate the plot based on how we subset the dataset.
+
+```{r}
+plot(mpsz) #plot based on the different column attributes
+plot(mpsz["PLN_AREA_N"]) #colour plot based on column `PLN_AREA_N`
+
+
+plot(st_geometry(mpsz)) #only plot the basic geometry of the polygon data
+condition <- mpsz$SUBZONE_NO > 5 #set a condition
+plot(mpsz[condition, ], col = "turquoise", add = TRUE) #layer the condition above the initial plot
+
+```
+
+## Changing of Projection
+
+The Coordinate Reference System (CRS) of spatial objects defines where they are placed on the Earth's surface. We need to ensure the CRS of our sf objects are correct. Since Singapore uses EPSG:3414 - SVY21 / Singapore TM and from the above details, we understand that all the sf object does not conform to the correct CRS (WGS 84 or SVY21). We will utilise two different function, st_set_crs or st_transform to manually change the CRS of our sp object to the desired value.
+
+```{r}
+mpsz3414 <- st_set_crs(mpsz, 3414)
+
+preschool3414 <- st_transform(preschool, 
+                              crs = 3414)
+
+
+st_geometry(mpsz3414)
+st_geometry(preschool3414)
+```
+
+## Importing and Converting an Aspatial Data
+
+R provides the function to convert any foreign object to an sf object using the `st_as_sf` function. This will allow user to provide a data table that consist of the longitude and latitude and select the correct CRS to transform it to the approriate sf object.
+
+After importing the data, we will examine the dataframe using the `list` function.
+
+```{r}
+
+listings <- read_csv("data/aspatial/listings.csv")
+list(listings) 
+
+```
+
+The output reveals that the data frame consists of 4252 rows and 16 columns. The column longtitude and latitude will be required for to transform this data frame to a sf object.
+
+```{r}
+
+listings_sf <- st_as_sf(listings, 
+                       coords = c("longitude", "latitude"),
+                       crs=4326) %>%
+  st_transform(crs = 3414)
+
+st_crs(listings_sf)
+
+
+```
+
+## Joining sf and tibble dataframe
+
+One way to manipulate a dataframe is to combine two different sets of data frame together to combine the information retrieved. We will now aggregate the room price of the apartment based on the planning area.
+
+-   `mutate`: Adds new variables and preserves existing ones. If the new column is referencing an exisiting column, it will replace the variable. Since all the planning area are in uppercase in the mpsz data frame, we will use `toupper` to convert all the variables inside neighbourhood to uppercase.
+-   `filter`: To remove irrelevant rows that are not required for the join.
+-   `rename`: Rename the column. I will be changing the neighbourhood to `PLN_AREA_N` to allow both data frame to identify the keys for the join.
+-   `summarise`: After grouping the variables through the `group_by` function, we will summarise it to one row with the average price using the `mean` function.
+
+```{r}
+
+listings_tidy <- listings %>%
+  mutate (neighbourhood = toupper(neighbourhood)) %>%
+  filter ((neighbourhood %in% unique(mpsz$PLN_AREA_N))) %>%
+  rename("PLN_AREA_N" = "neighbourhood") %>%
+  group_by(PLN_AREA_N) %>%
+  summarise (avgprice = mean(price)) %>%
+  ungroup()
+
+
+mpsz3414 <- mpsz3414 %>%
+  left_join(listings_tidy)
+```
+
+## Geoprocessing with sf package
+
+### Buffering
+
+In some cases, there is a need to create a buffering zone along the `linestring` object. An example would be to expand 5m along a road and understanding the total area increased through the expansion. One way we can do this is to use the [`st_buffer`](https://r-spatial.github.io/sf/reference/geos_unary.html) function that computes a buffer around this geometry/each geometry. To find out the overall area, [`st_area`](https://r-spatial.github.io/sf/reference/geos_measures.html) will be used. If the coordinates are in degrees longtitude/latitude, `st_geod_area` is used for area calculation.
+
+```{r}
+
+buffer_cycling <- st_buffer(cyclingpath, 
+                               dist=5, nQuadSegs = 30)
+
+buffer_cycling$AREA <- st_area(buffer_cycling)
+
+sum(buffer_cycling$AREA)
+
+
+```
+
+### Visualising of buffering
+
+From the below visualisation, we are able to better understand how the buffer distance is being calculated and the different endCapStyle to be use for the buffer.
+
+```{r}
+
+cyclingpath_buffer <- cyclingpath[1,] %>%
+  select (-CYL_PATH_1)
+
+op = par(mfrow=c(2,3))
+plot(st_buffer(cyclingpath_buffer, dist = 1, endCapStyle="ROUND"), reset = FALSE, main = "endCapStyle: ROUND, distance 1")
+plot(cyclingpath_buffer,col='blue',add=TRUE)
+plot(st_buffer(cyclingpath_buffer, dist = 2, endCapStyle="FLAT"), reset = FALSE, main = "endCapStyle: FLAT, distance 2")
+plot(cyclingpath_buffer,col='blue',add=TRUE)
+plot(st_buffer(cyclingpath_buffer, dist = 3, endCapStyle="SQUARE"), reset = FALSE, main = "endCapStyle: SQUARE, distance 3")
+plot(cyclingpath_buffer,col='blue',add=TRUE)
+
+
+```
+
+```{r}
+
+mpsz3414$`PreSch Count`<- lengths(st_intersects(mpsz3414, preschool3414))
+
+summary(mpsz3414$`PreSch Count`)
+
+top_n(mpsz3414, 1, `PreSch Count`)
+
+
+```
+
+## Plotting of geographical data
+
+```{r}
+mpsz3414$Area <- mpsz3414 %>%
+  st_area()
+
+mpsz3414 <- mpsz3414 %>%
+  mutate(`PreSch Density` = `PreSch Count`/Area * 1000000)
+
+hist(mpsz3414$`PreSch Density`)
+
+```
+
+## Visualising of geographical data using ggplot2
+
+```{r}
+
+ggplot(data=mpsz3414, 
+       aes(x= as.numeric(`PreSch Density`)))+
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue") +
+  labs(title = "Are pre-school even distributed in Singapore?",
+       subtitle= "There are many planning sub-zones with a single pre-school, on the other hand, \nthere are two planning sub-zones with at least 20 pre-schools",
+      x = "Pre-school density (per km sq)",
+      y = "Frequency")
+
+
+```
+
+```{r}
+
+ggplot(data=mpsz3414, 
+       aes(x= as.numeric(`PreSch Density`), y = as.numeric(`PreSch Count`)))+
+  geom_point() +
+  labs(title = "Are pre-school even distributed in Singapore?",
+      x = "Pre-school density (per km sq)",
+      y = "Pre-school Count")
+
+```

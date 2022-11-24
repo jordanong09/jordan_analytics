@@ -1,0 +1,614 @@
+---
+title: "Introduction to Choropleth Mapping"
+subtitle: Utilising the different libraries such as ggplot, tmap and leaflet to visualise geographical data.
+author: "Ong Zhi Rong Jordan"
+date: 2022-11-23
+categories:
+  - geospatial
+  - sf
+  - ggplot
+  - tmap
+  - leaflet
+image: "geomap.png"
+toc: true
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Libraries
+
+For this analysis, we will use the following packages from CRAN.
+
+-   [`sf`](https://cloud.r-project.org/web/packages/sf/index.html) - Support for simple features, a standardized way to encode spatial vector data. Binds to 'GDAL' for reading and writing data, to 'GEOS' for geometrical operations, and to 'PROJ' for projection conversions and datum transformations. Uses by default the 's2' package for spherical geometry operations on ellipsoidal (long/lat) coordinates.
+-   [`tidyverse`](https://www.tidyverse.org/packages/) - Loading the core tidyverse packages which will be used for data wrangling and visualisation.
+-   [`tmap`](https://cran.r-project.org/web/packages/tmap/index.html) - Thematic maps are geographical maps in which spatial data distributions are visualized. This package offers a flexible, layer-based, and easy to use approach to create thematic maps, such as choropleths and bubble maps.
+-   [`leaflet`](https://rstudio.github.io/leaflet/) - Create and customize interactive maps using the 'Leaflet' JavaScript library and the 'htmlwidgets' package.
+-   [`scales`](https://cran.r-project.org/web/packages/scales/index.html) - Graphical scales map data to aesthetics, and provide methods for automatically determining breaks and labels for axes and legends.
+-   [`viridis`](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html) - color scales in this package to make plots that are pretty, better represent your data, easier to read by those with colorblindness, and print well in gray scale
+
+```{r}
+
+pacman::p_load(sf, tidyverse, tmap, leaflet, scales, viridis)
+
+```
+
+## Data Preparation
+
+Two data set will be used to create the choropleth map. They are:
+
+-   Master Plan 2014 Subzone Boundary (Web) (i.e. `MP14_SUBZONE_WEB_PL`) in ESRI shapefile format. It can be downloaded at [data.gov.sg](https://data.gov.sg/) This is a geospatial data. It consists of the geographical boundary of Singapore at the planning subzone level. The data is based on URA Master Plan 2014.
+
+-   Singapore Residents by Planning Area / Subzone, Age Group, Sex and Type of Dwelling, June 2011-2020 in csv format (i.e. `respopagesextod2011to2020.csv`). This is an aspatial data fie. It can be downloaded at [Department of Statistics, Singapore](https://www.singstat.gov.sg/) Although it does not contain any coordinates values, but it's PA and SZ fields can be used as unique identifiers to geocode to `MP14_SUBZONE_WEB_PL` shapefile.
+
+### Importing of Geospatial Data
+
+The code chunk below uses the *st_read()* function of **sf** package to import `MP14_SUBZONE_WEB_PL` shapefile into R as a simple feature data frame called `mpsz`. To view the tibble data frame, we can simply call the tibble file name `mpsz`. When you print a tibble, it only shows the first ten rows and all the columns that fit on one screen. It also prints an abbreviated description of the column type.
+
+```{r}
+mpsz <- st_read(dsn = "data/geospatial", 
+                layer = "MP14_SUBZONE_WEB_PL") %>%
+  st_transform(crs = 3414)
+
+mpsz
+```
+
+### Importing Attribute Data into R
+
+Next, we will import *respopagsex2000to2018.csv* file into RStudio and save the file into an R dataframe called *popdata*.
+
+The task will be performed by using *read_csv()* function of **readr** package as shown in the code chunk below.
+
+```{r, eval = FALSE}
+
+popdata <- read_csv("data/respopagesextod2011to2020.csv")
+
+```
+
+### Data Wrangling
+
+The following data wrangling and transformation functions will be used:
+
+-   *pivot_wider()* of **tidyr** package, and
+
+-   *mutate()*, *filter()*, *group_by()* and *select()* of **dplyr** package
+
+```{r, eval = FALSE}
+popdata2020 <- popdata %>%
+  filter(Time == 2020) %>%
+  group_by(PA, SZ, AG) %>%
+  summarise(`POP` = sum(`Pop`)) %>%
+  ungroup()%>%
+  pivot_wider(names_from=AG, 
+              values_from=POP) %>%
+  mutate(YOUNG = rowSums(.[3:6])
+         +rowSums(.[12])) %>%
+mutate(`ECONOMY ACTIVE` = rowSums(.[7:11])+
+rowSums(.[13:15]))%>%
+mutate(`AGED`=rowSums(.[16:21])) %>%
+mutate(`TOTAL`=rowSums(.[3:21])) %>%  
+mutate(`DEPENDENCY` = (`YOUNG` + `AGED`)
+/`ECONOMY ACTIVE`) %>%
+  select(`PA`, `SZ`, `YOUNG`, 
+       `ECONOMY ACTIVE`, `AGED`, 
+       `TOTAL`, `DEPENDENCY`)
+
+```
+
+### Joining of attribute and geospatial data frame
+
+Before we can perform the georelational join, one extra step is required to convert the values in PA and SZ fields to uppercase. This is because the values of PA and SZ fields are made up of upper- and lowercase. On the other, hand the SUBZONE_N and PLN_AREA_N are in uppercase.
+
+Next, *left_join()* of **dplyr** is used to join the geographical data and attribute table using planning subzone name e.g. *SUBZONE_N* and *SZ* as the common identifier.
+
+```{r, eval = FALSE}
+popdata2020 <- popdata2020 %>%
+  mutate_at(.vars = vars(PA, SZ), 
+          .funs = funs(toupper)) %>%
+  filter(`ECONOMY ACTIVE` > 0)
+
+mpsz_pop2020 <- left_join(mpsz, popdata2020,
+                          by = c("SUBZONE_N" = "SZ"))
+
+
+```
+
+```{r,echo=FALSE}
+
+mpsz_pop2020 <- readRDS("data/rds/mpszpop2020.rds")
+```
+
+## Choropleth Mapping of Geospatial Data
+
+### Plotting using TMap
+
+**tmap** has similar syntax to the popular `ggplot2` but will also produce a reasonable map with only a couple of lines of code. A default colour scheme will be given where this is not specified and passed to *tm_polygons* and a legend will also be created by default.
+
+**tmap** also offer the user two views, static (plot) or interactive (view).
+
+Two approaches can be used to prepare thematic map using *tmap*, they are:
+
+-   Plotting a thematic map quickly by using *qtm()*.
+
+-   Plotting highly customisable thematic map by using tmap elements.
+
+#### Plotting a choropleth map quickly by using qtm()
+
+`qtm` is termed as quick thematic mode allow users to quickly draw a choropleth with a single line of code. It is concise and provides a good default visualisation in many cases. We will explore the different view that tmap provides.
+
+The code chunk below will draw an **interactive** cartographic standard choropleth map as shown below. The fill argument is used to map the attribute. (i.e. DEPENDENCY)
+
+The interactive mode uses the leaflet library. Since the leaflet library require the sf object to be in WGS84, we need to set the `tmap_options` to true to allow our data set which is SVY21 to be plotted on the leaflet map.
+
+```{r}
+
+tmap_mode("view")
+tmap_options(check.and.fix = TRUE)
+qtm(mpsz_pop2020, 
+    fill = "DEPENDENCY")
+tmap_mode("plot")
+```
+
+The code chunk below will draw a **static** cartographic standard choropleth map as shown below.
+
+```{r, eval = FALSE}
+
+qtm(mpsz_pop2020, 
+    fill = "DEPENDENCY")
+
+
+```
+
+```{r, echo=FALSE, fig.align='center', fig.cap="static map using qtm"}
+knitr::include_graphics("tmap03.png")
+
+```
+
+#### Creating a choropleth map by using tmap's elements
+
+Despite its usefulness of drawing a choropleth map quickly and easily, the disadvantge of qtm() is that it makes aesthetics of individual layers harder to control. To draw a high quality cartographic choropleth map as shown in the figure below, **tmap**'s drawing elements should be used. In the following sub-section, we will share with you tmap functions that used to plot these elements.
+
+```{r, eval = FALSE}
+
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY", 
+          style = "quantile", 
+          palette = "Blues",
+          title = "Dependency ratio") +
+  tm_layout(main.title = "Distribution of Dependency Ratio by planning subzone",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2) +
+  tm_credits("Source: Planning Sub-zone boundary from Urban Redevelopment Authorithy (URA)\n and Population data from Department of Statistics DOS", 
+             position = c("left", "bottom"))
+
+
+```
+
+```{r, echo=FALSE, fig.align='center', fig.cap="static tmap with tmap elements"}
+knitr::include_graphics("tmap02.png")
+
+```
+
+#### Drawing a base map
+
+The basic building block of tmap is tm_shape() followed by one or more layer elemments such as tm_fill() and tm_polygons().
+
+In the code chunk below, tm_shape() is used to define the input data (i.e mpsz_pop2020) and tm_polygons() is used to draw the planning subzone polygons
+
+```{r, eval = FALSE}
+
+tm_shape(mpsz_pop2020) +
+  tm_polygons()
+
+```
+
+```{r, echo=FALSE, fig.align='center', fig.cap="base map without elements"}
+knitr::include_graphics("tmap07.png")
+
+```
+
+#### Drawing a choropleth map using tm_polygons()
+
+To draw a choropleth map showing the geographical distribution of a selected variable by planning subzone, we just need to assign the target variable such as Dependency to tm_polygons(). This is similar to the `qtm` drawn earlier.
+
+-   The default interval binning used to draw the choropleth map is called "pretty".
+-   The default colour scheme used is YlOrRd of ColorBrewer
+-   By default, Missing value will be shaded in grey.
+
+```{r, eval = FALSE}
+tm_shape(mpsz_pop2020)+
+  tm_polygons("DEPENDENCY")
+```
+
+```{r, echo=FALSE, fig.align='center', fig.cap="map with polygons"}
+knitr::include_graphics("tmap03.png")
+```
+
+#### Drawing a choropleth map using tm_fill() and \*tm_border()\*\*
+
+Actually, tm_polygons() is a wraper of tm_fill() and tm_border(). tm_fill() shades the polygons by using the default colour scheme and tm_borders() adds the borders of the shapefile onto the choropleth map.
+
+The code chunk below draws a choropleth map by using tm_fill() alone.
+
+```{r, eval = FALSE}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY")
+```
+
+```{r, echo=FALSE, fig.align='center', fig.cap="map with fill only"}
+knitr::include_graphics("tmap04.png")
+```
+
+To add the boundary of the planning subzones, tm_borders will be used as shown in the code chunk below.
+
+```{r, eval = FALSE}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY") +
+  tm_borders(lwd = 0.1,  alpha = 1)
+
+```
+
+```{r, echo=FALSE, fig.align='center', fig.cap="map with fill and borders"}
+knitr::include_graphics("tmap05.png")
+```
+
+#### Data classification methods of tmap
+
+Most choropleth maps employ some methods of data classification. The point of classification is to take a large number of observations and group them into data ranges or classes.
+
+**tmap** provides a total ten data classification methods, namely: *fixed*, *sd*, *equal*, *pretty* (default), *quantile*, *kmeans*, *hclust*, *bclust*, *fisher*, and *jenks*.
+
+The code chunk below shows multiple data classification methods and classes to illustrate the difference. *tmap_arrange* is used to display the consolidated maps in grid form.
+
+```{r, eval = FALSE}
+
+tmap1 <-  tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 4,
+          style = "quantile") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Quantile - 4 Class", title.size = 0.7, legend.text.size = 0.4)
+
+tmap2 <-  tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 4,
+          style = "jenks") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Jenks - 4 Class", title.size = 0.7, legend.text.size = 0.4)
+
+tmap3 <-  tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 4,
+          style = "equal") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Equal - 5 Class", title.size = 0.7, legend.text.size = 0.4)
+
+tmap4 <-  tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 5,
+          style = "hclust") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Hclust - 5 Class", title.size = 0.7, legend.text.size = 0.4)
+
+tmap5 <-  tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 5,
+          style = "sd") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Sd - 5 Class", title.size = 0.7, legend.text.size = 0.4)
+
+
+tmap6 <-  tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 5,
+          style = "kmeans") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Kmeans - 5 Class", title.size = 0.7, legend.text.size = 0.4)
+
+tmap_arrange(tmap1, tmap2, tmap3, tmap4, tmap5, tmap6, ncol = 3)
+
+
+```
+
+```{r, echo=FALSE, fig.align='center', fig.cap="tmap with multiple data classification methods and classes"}
+knitr::include_graphics("tmap01.png")
+```
+
+```{r}
+
+summary(mpsz_pop2020$DEPENDENCY)
+
+tmap_mode("plot")
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          breaks = c(0, 0.60, 0.70, 0.80, 0.90, 1.00)) +
+  tm_borders(alpha = 0.5) 
+
+```
+
+```{r}
+
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 6,
+          style = "quantile",
+          palette = "Blues") +
+  tm_borders(alpha = 0.5)
+
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          style = "quantile",
+          palette = "-Greens") +
+  tm_borders(alpha = 0.5)
+
+```
+
+```{r}
+
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY", 
+          style = "jenks", 
+          palette = "Blues", 
+          legend.hist = TRUE, 
+          legend.is.portrait = TRUE,
+          legend.hist.z = 0.1) +
+  tm_layout(main.title = "Distribution of Dependency Ratio by planning subzone \n(Jenks classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.outside = FALSE,
+            legend.position = c("right", "bottom"),
+            frame = FALSE) +
+  tm_borders(alpha = 0.5)
+
+```
+
+```{r}
+
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY", 
+          style = "quantile", 
+          palette = "-Greens") +
+  tm_borders(alpha = 0.5) +
+  tmap_style("classic")
+
+
+```
+
+```{r}
+
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY", 
+          style = "quantile", 
+          palette = "Blues",
+          title = "No. of persons") +
+  tm_layout(main.title = "Distribution of Dependency Ratio \nby planning subzone",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_grid(lwd = 0.1, alpha = 0.2) +
+  tm_credits("Source: Planning Sub-zone boundary from Urban Redevelopment Authorithy (URA)\n and Population data from Department of Statistics DOS", 
+             position = c("left", "bottom")) +
+  tmap_style("white")
+
+```
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill(c("YOUNG", "AGED"),
+          style = "equal", 
+          palette = "Blues") +
+  tm_layout(legend.position = c("right", "bottom")) +
+  tm_borders(alpha = 0.5) +
+  tmap_style("white")
+
+tm_shape(mpsz_pop2020)+ 
+  tm_polygons(c("DEPENDENCY","AGED"),
+          style = c("equal", "quantile"), 
+          palette = list("Blues","Greens")) +
+  tm_layout(legend.position = c("right", "bottom"))
+
+```
+
+```{r}
+
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY",
+          style = "quantile",
+          palette = "Blues",
+          thres.poly = 0) + 
+  tm_facets(by="REGION_N", 
+            free.coords=TRUE, 
+            drop.shapes=TRUE) +
+  tm_layout(legend.show = FALSE,
+            title.position = c("center", "center"), 
+            title.size = 20) +
+  tm_borders(alpha = 0.5)
+
+```
+
+```{r}
+
+youngmap <- tm_shape(mpsz_pop2020)+ 
+  tm_polygons("YOUNG", 
+              style = "quantile", 
+              palette = "Blues")
+
+agedmap <- tm_shape(mpsz_pop2020)+ 
+  tm_polygons("AGED", 
+              style = "quantile", 
+              palette = "Blues")
+
+tmap_arrange(youngmap, agedmap, asp=1, ncol=2)
+
+
+```
+
+```{r}
+
+tm_shape(mpsz_pop2020[mpsz_pop2020$REGION_N=="CENTRAL REGION", ])+
+  tm_fill("DEPENDENCY", 
+          style = "quantile", 
+          palette = "Blues", 
+          legend.hist = TRUE, 
+          legend.is.portrait = TRUE,
+          legend.hist.z = 0.1) +
+  tm_layout(legend.outside = TRUE,
+            legend.height = 0.45, 
+            legend.width = 5.0,
+            legend.position = c("right", "bottom"),
+            frame = FALSE) +
+  tm_borders(alpha = 0.5)
+
+
+```
+
+### Plotting using ggplot
+
+ggplot provides the user much more flexibility in the layers required on the map. Since our object is an `sf` object, we will use `geom_sf` which will automatically detect a geometry column and map it. *coord_sf* is also used to govern the map projection.
+
+```{r}
+
+ggmap <- ggplot(data = mpsz_pop2020) +
+  geom_sf(aes(fill = YOUNG)) +
+  geom_text(aes(x = X_ADDR, y = Y_ADDR, label = PLN_AREA_C), size = 1) + #input the planning area labels
+  xlab("Longitude") + ylab("Latitude") + #x and y axis name
+  ggtitle("Dependency level across Planning Area") + #title
+  theme_bw() + #theme chosen
+  theme(panel.grid.major = element_line(color = gray(.5), linetype = "dashed", size = 0.5),
+        panel.background = element_rect(fill = "aliceblue")) + 
+  coord_sf(crs = st_crs(3414)) 
+
+ggmap
+
+```
+
+The `viridis` package also allow the user to improve the colour scaling on the plot. Since we use `fill` to fill the map with the Young attribute, we will use `scale_fill_viridis` to scale the variable based on the viridis palette.
+
+```{r}
+
+ggmap + scale_fill_viridis(option = "magma", direction = -1)
+
+```
+
+### Plotting using leaflet
+
+Leaflet is one of the most popular open-source JavaScript libraries for interactive maps. This package has grown significantly in popularity in recent years and has fast become common currency amongst companies wishing to dynamically visualize its data. It is an excellent option to consider where the patterns in your data are large and complex and where you have constituent polygons of varying sizes.
+
+### Features
+
+-   Interactive panning/zooming
+
+-   Compose maps using arbitrary combinations of:
+
+    -   Map tiles
+
+    -   Markers
+
+    -   Polygons
+
+    -   Lines
+
+    -   Popups
+
+    -   GeoJSON
+
+-   Create maps right from the R console or RStudio
+
+-   Embed maps in [knitr](http://yihui.name/knitr/)/[R Markdown](http://rmarkdown.rstudio.com/) documents and [Shiny](http://shiny.rstudio.com/) apps
+
+-   Easily render spatial objects from the `sp` or `sf` packages, or data frames with latitude/longitude columns
+
+-   Use map bounds and mouse events to drive Shiny logic
+
+-   Display maps in non spherical mercator projections
+
+-   Augment map features using chosen plugins from [leaflet plugins repository](https://leafletjs.com/plugins)
+
+#### Data Preparation for leaflet mapping
+
+Firstly, we create a new column and scale the `Young` attribute from 0 - 100. We use the `colorBin` function to maps numeric input data to a fixed number of output colors using the bin created. We then create the interactive labels using the `sprintf` function.
+
+```{r}
+
+mpsz_pop2020_leaflet <- mpsz_pop2020 %>%
+  mutate (youngpct = rescale(YOUNG, to = c(0,100)))
+
+mpsz_pop2020_leaflet$youngpct[is.nan(mpsz_pop2020_leaflet$youngpct)]<-0
+
+bins <- c(0, 20, 30, 40, 50, 60, 70, 80, 90, Inf)
+pal <- colorBin("YlOrRd", domain = mpsz_pop2020_leaflet$youngpct, bins = bins)
+
+labels <- sprintf(
+  "<strong>%s</strong><br/>%g Young Pct",
+  mpsz_pop2020_leaflet$PLN_AREA_N, mpsz_pop2020_leaflet$youngpct
+) %>% lapply(htmltools::HTML)
+
+
+```
+
+#### CRS projection for leaflet mapping
+
+The Leaflet package expects all point, line, and shape data to be specified in latitude and longitude using WGS 84 (a.k.a. EPSG:4326). By default, when displaying this data it projects everything to EPSG:3857 and expects that any map tiles are also displayed in EPSG:3857.
+
+Therefore, we will need to transform our `sf` object to the correct crs using `st_transform`.
+
+```{r}
+
+mpsz_pop2020_leaflet <- mpsz_pop2020_leaflet %>%
+  st_transform(crs = 4326)
+```
+
+#### Plotting of leaflet map
+
+The easiest way to add tiles is by calling addTiles() with no arguments; by default, OpenStreetMap tiles are used. But many popular free third-party basemaps can be added using the `addProviderTiles()` function, which is implemented using the [leaflet-providers plugin](https://github.com/leaflet-extras/leaflet-providers).
+
+As a convenience, leaflet also provides a named list of all the third-party tile providers that are supported by the plugin. This enables you to use auto-completion feature of your favorite R IDE (like RStudio) and not have to remember or look up supported tile providers; just type `providers$` and choose from one of the options. You can also use `names(providers)` to view all of the options. For this visualisation, I will use the CartoDB.Positron tiles.
+
+```{r}
+
+leaflet(mpsz_pop2020_leaflet) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+  fillColor = ~pal(youngpct),
+  weight = 1,
+  opacity = 1,
+  color = "white",
+  dashArray = "3",
+  fillOpacity = 0.7,
+  highlight = highlightOptions(
+    weight = 5,
+    color = "#666",
+    dashArray = "",
+    fillOpacity = 0.7,
+    bringToFront = TRUE),
+  label = labels,
+  labelOptions = labelOptions(
+    style = list("font-weight" = "normal", padding = "3px 8px"),
+    textsize = "15px",
+    direction = "auto")) %>%
+addLegend(pal = pal, values = ~youngpct, opacity = 0.7, title = NULL,
+                position = "bottomright")
+
+```
+
+## Conclusion
+

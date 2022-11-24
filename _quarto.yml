@@ -4,10 +4,10 @@ project:
 website:
   title: "Bringing Data to Life"
   description: "L"
-  image: /media/geospatial.png
+  image: /media/profile.png
   navbar:
     search: true
-    logo: /media/geospatial.png
+    logo: /media/profile.png
     right:
       - href: index.qmd
         text: Home
