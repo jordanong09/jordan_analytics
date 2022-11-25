@@ -117,7 +117,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit"
   }
-}</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><link rel="stylesheet" href="../../../styles.css">
+}</script><link rel="stylesheet" href="../../../styles.css">
 </head>
 <body class="nav-fixed">
 
@@ -345,8 +345,8 @@ Moran I statistic       Expectation          Variance
 <p>To better understand the result, we will reference the following table.</p>
 <table class="table">
 <colgroup>
-<col style="width: 31%">
-<col style="width: 68%">
+<col style="width: 33%">
+<col style="width: 66%">
 </colgroup>
 <tbody>
 <tr class="odd">
@@ -679,7 +679,7 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">hunan.localMI.sub</span> <span class="op">&lt;-</span> <span class="va">hunan.localMI</span> <span class="op">%&gt;%</span>
   <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span> <span class="op">(</span><span class="va">Pr.Ii</span> <span class="op">&lt;=</span> <span class="fl">0.05</span><span class="op">)</span>
 
-<span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.localMI</span><span class="op">)</span> <span class="op">+</span>
+<span class="va">imap</span> <span class="op">&lt;-</span> <span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.localMI</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_fill</span><span class="op">(</span><span class="st">"white"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_borders</span><span class="op">(</span><span class="st">"grey"</span>, lwd <span class="op">=</span> <span class="fl">0.5</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.localMI.sub</span><span class="op">)</span> <span class="op">+</span>
@@ -690,7 +690,9 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
   <span class="fu">tm_borders</span><span class="op">(</span><span class="st">"grey"</span>, lwd <span class="op">=</span> <span class="fl">0.5</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_layout</span><span class="op">(</span>main.title <span class="op">=</span> <span class="st">"Local Moran I value for p &lt; 0.05"</span>,
             main.title.size <span class="op">=</span> <span class="fl">0.7</span>,
-            main.title.fontface <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+            main.title.fontface <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>
+
+<span class="va">imap</span> </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
 </div>
@@ -712,37 +714,43 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 </div>
 <p>In the upper right quadrant, there are cases where both the attribute value and the local average are greater than the global average. Similarly, in the lower left quadrant, there are cases where both the attribute value and the local mean are below the global mean. These conditions confirm positive spatial autocorrelation. Cases in the other two quadrants show negative spatial autocorrelation.</p>
 </section><section id="preparing-lisa-map-classes" class="level3"><h3 class="anchored" data-anchor-id="preparing-lisa-map-classes">Preparing LISA map classes</h3>
-<p>We will now prepare the LISA map classes. We first need to retrieve the quadrant for each area. The</p>
+<p>We will now prepare the LISA map classes. We first need to retrieve the quadrant for each area.</p>
 <div class="cell">
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">quadrant</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html">vector</a></span><span class="op">(</span>mode<span class="op">=</span><span class="st">"numeric"</span>,length<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">localMI</span><span class="op">)</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Next, we centers the variable of interest around its mean.</p>
+<p>Next, we scale the GDPPC.</p>
 <div class="cell">
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">DV</span> <span class="op">&lt;-</span> <span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span><span class="op">)</span>     </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">DV</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">hunan.localMI</span><span class="op">$</span><span class="va">GDPPC</span><span class="op">)</span>   </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>This is follow by centering the local Moran’s around the mean.</p>
+<p>This is follow by finding the lag of the scaled GDPPC.</p>
 <div class="cell">
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">C_mI</span> <span class="op">&lt;-</span> <span class="va">localMI</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">localMI</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">)</span>    </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">C_mI</span> <span class="op">&lt;-</span> <span class="fu">lag.listw</span><span class="op">(</span><span class="va">rswm_q</span>, <span class="va">DV</span><span class="op">)</span>   </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Next, we will set a statistical significance level (<span class="math inline">\(\alpha\)</span>) for the local Moran. (can be 0.05, 0.01 or 0.001)</p>
+<p>Using the Moran Scatterplot below, we filter all the area with p value &lt; 0.05 and identify significant areas. We can see that the plot below is align with our Moran I plot where there are a total of 11 significant areas, 2 areas that are outliers (LH), and 9 areas that are clusters (7 HH and 2 LL).</p>
 <div class="cell">
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">signif</span> <span class="op">&lt;-</span> <span class="fl">0.05</span>       </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">MIplot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">DV</span>,<span class="va">C_mI</span>,<span class="va">localMI</span><span class="op">[</span>,<span class="fl">5</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>
+<span class="va">MIplot</span> <span class="op">&lt;-</span> <span class="va">MIplot</span> <span class="op">%&gt;%</span>
+  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span> <span class="op">(</span><span class="va">X3</span> <span class="op">&lt;</span> <span class="fl">0.05</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">MIplot</span><span class="op">$</span><span class="va">X1</span>, y <span class="op">=</span> <span class="va">MIplot</span><span class="op">$</span><span class="va">X2</span>, main <span class="op">=</span> <span class="st">"Moran Scatterplot PPOV"</span>, xlab <span class="op">=</span> <span class="st">"scaled GDDPC"</span>, ylab <span class="op">=</span> <span class="st">"Lag scaled GDPPC"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0</span>, v <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid" width="672"></p>
 </div>
-<p>We will then define the quadrant based on the following criteria:</p>
+</div>
+<p>We will now then define the quadrant based on the following criteria and place non-significant Moran (p value &lt; 0.05) in the category 0.:</p>
 <div class="cell">
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">quadrant</span><span class="op">[</span><span class="va">DV</span> <span class="op">&gt;</span><span class="fl">0</span> <span class="op">&amp;</span> <span class="va">C_mI</span><span class="op">&gt;</span><span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">4</span>      
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">signif</span> <span class="op">&lt;-</span> <span class="fl">0.05</span> 
+<span class="va">quadrant</span><span class="op">[</span><span class="va">DV</span> <span class="op">&gt;</span><span class="fl">0</span> <span class="op">&amp;</span> <span class="va">C_mI</span><span class="op">&gt;</span><span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">4</span>      
 <span class="va">quadrant</span><span class="op">[</span><span class="va">DV</span> <span class="op">&lt;</span><span class="fl">0</span> <span class="op">&amp;</span> <span class="va">C_mI</span><span class="op">&lt;</span><span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span>      
 <span class="va">quadrant</span><span class="op">[</span><span class="va">DV</span> <span class="op">&lt;</span><span class="fl">0</span> <span class="op">&amp;</span> <span class="va">C_mI</span><span class="op">&gt;</span><span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">2</span>
-<span class="va">quadrant</span><span class="op">[</span><span class="va">DV</span> <span class="op">&gt;</span><span class="fl">0</span> <span class="op">&amp;</span> <span class="va">C_mI</span><span class="op">&lt;</span><span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Lastly, places non-significant Moran in the category 0.</p>
-<div class="cell">
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">quadrant</span><span class="op">[</span><span class="va">localMI</span><span class="op">[</span>,<span class="fl">5</span><span class="op">]</span><span class="op">&gt;</span><span class="va">signif</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span class="va">quadrant</span><span class="op">[</span><span class="va">DV</span> <span class="op">&gt;</span><span class="fl">0</span> <span class="op">&amp;</span> <span class="va">C_mI</span><span class="op">&lt;</span><span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">3</span>
+<span class="va">quadrant</span><span class="op">[</span><span class="va">localMI</span><span class="op">[</span>,<span class="fl">5</span><span class="op">]</span><span class="op">&gt;</span><span class="va">signif</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section><section id="plotting-lisa-map" class="level3"><h3 class="anchored" data-anchor-id="plotting-lisa-map">Plotting LISA map</h3>
 <p>Once the quadrant of each area has been decided, we will now plot the LISA map using <code>tmap</code>. We will plot both the base map with the GDDPC distribution and the LISA map to better understand the relationship.</p>
 <div class="cell">
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">hunan.localMI</span><span class="op">$</span><span class="va">quadrant</span> <span class="op">&lt;-</span> <span class="va">quadrant</span>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">tmap_mode</span><span class="op">(</span><span class="st">"plot"</span><span class="op">)</span>
+<span class="va">hunan.localMI</span><span class="op">$</span><span class="va">quadrant</span> <span class="op">&lt;-</span> <span class="va">quadrant</span>
 <span class="va">colors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"#ffffff"</span>, <span class="st">"#2c7bb6"</span>, <span class="st">"#abd9e9"</span>, <span class="st">"#fdae61"</span>, <span class="st">"#d7191c"</span><span class="op">)</span>
 <span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"insignificant"</span>, <span class="st">"low-low"</span>, <span class="st">"low-high"</span>, <span class="st">"high-low"</span>, <span class="st">"high-high"</span><span class="op">)</span>
 
@@ -750,8 +758,7 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
   <span class="fu">tm_fill</span><span class="op">(</span>col <span class="op">=</span> <span class="st">"quadrant"</span>, 
           style <span class="op">=</span> <span class="st">"cat"</span>, 
           palette <span class="op">=</span> <span class="va">colors</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">quadrant</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="fl">1</span><span class="op">]</span>, 
-          labels <span class="op">=</span> <span class="va">clusters</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">quadrant</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="fl">1</span><span class="op">]</span>,
-          popup.vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">""</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+          labels <span class="op">=</span> <span class="va">clusters</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">quadrant</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_view</span><span class="op">(</span>set.zoom.limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">11</span>,<span class="fl">17</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_borders</span><span class="op">(</span>alpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_layout</span><span class="op">(</span>main.title <span class="op">=</span> <span class="st">"LISA Map with Quadrant"</span>, main.title.size <span class="op">=</span> <span class="fl">0.7</span>,
@@ -765,11 +772,12 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
   <span class="fu">tm_layout</span><span class="op">(</span>main.title <span class="op">=</span> <span class="st">"GDDPC using Quantile classification"</span>, main.title.size <span class="op">=</span> <span class="fl">0.7</span>,
             main.title.fontface <span class="op">=</span> <span class="st">"bold"</span>, main.title.position <span class="op">=</span> <span class="st">"center"</span><span class="op">)</span>
 
-<span class="fu">tmap_arrange</span><span class="op">(</span><span class="va">basemap</span>, <span class="va">lisamap</span>, asp<span class="op">=</span><span class="fl">1</span>, ncol<span class="op">=</span><span class="fl">2</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span class="fu">tmap_arrange</span> <span class="op">(</span><span class="va">imap</span>,<span class="va">lisamap</span>,<span class="va">basemap</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+<p>Based on the map plot above, we can see that the Moran I value map provide us with insights on which areas are consider outliers or clusters. The LISA map provide us with more in-depth information on whether the outliers are HL or LH and whether the clusters are HH or LL. These attributes can further be confirmed by referencing the base map on the right.</p>
 </section></section><section id="hot-spot-and-cold-spot-area-analysis" class="level2"><h2 class="anchored" data-anchor-id="hot-spot-and-cold-spot-area-analysis">Hot Spot and Cold Spot Area Analysis</h2>
 <p>By grouping points of occurrence into polygons or converging points that are close to one another based on a calculated distance, Hotspot Analysis uses vectors to locate statistically significant hot spots and cold spots in your data.</p>
 <section id="getis-and-ords-g-statistics" class="level3"><h3 class="anchored" data-anchor-id="getis-and-ords-g-statistics">Getis and Ord’s G-Statistics</h3>
@@ -789,7 +797,7 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 <p>These methods were explained on the previous post and therefore will not be elaborated here.</p>
 <p>The code chunk below is to generate the fixed distance weight matrix:</p>
 <div class="cell">
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu">st_centroid</span><span class="op">(</span><span class="fu">st_geometry</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span><span class="op">)</span>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu">st_centroid</span><span class="op">(</span><span class="fu">st_geometry</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span><span class="op">)</span>
 <span class="va">k1</span> <span class="op">&lt;-</span> <span class="fu">knn2nb</span><span class="op">(</span><span class="fu">knearneigh</span><span class="op">(</span><span class="va">coords</span><span class="op">)</span><span class="op">)</span>
 <span class="va">k1dists</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html">unlist</a></span><span class="op">(</span><span class="fu">nbdists</span><span class="op">(</span><span class="va">k1</span>, <span class="va">coords</span><span class="op">)</span><span class="op">)</span>
 <span class="va">wm_d59</span> <span class="op">&lt;-</span> <span class="fu">dnearneigh</span><span class="op">(</span><span class="va">coords</span>, <span class="fl">0</span>, <span class="fl">59</span><span class="op">)</span>
@@ -798,7 +806,7 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 <p>The output spatial weights object is called wm59_lw.</p>
 <p>The code chunk below is to generate the adaptive distance weight matrix:</p>
 <div class="cell">
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">knn</span> <span class="op">&lt;-</span> <span class="fu">knn2nb</span><span class="op">(</span><span class="fu">knearneigh</span><span class="op">(</span><span class="va">coords</span>, k<span class="op">=</span><span class="fl">8</span><span class="op">)</span><span class="op">)</span>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">knn</span> <span class="op">&lt;-</span> <span class="fu">knn2nb</span><span class="op">(</span><span class="fu">knearneigh</span><span class="op">(</span><span class="va">coords</span>, k<span class="op">=</span><span class="fl">8</span><span class="op">)</span><span class="op">)</span>
 <span class="va">knn_lw</span> <span class="op">&lt;-</span> <span class="fu">nb2listw</span><span class="op">(</span><span class="va">knn</span>, style <span class="op">=</span> <span class="st">'B'</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section></section><section id="computing-gi-statistics" class="level2"><h2 class="anchored" data-anchor-id="computing-gi-statistics">Computing Gi statistics</h2>

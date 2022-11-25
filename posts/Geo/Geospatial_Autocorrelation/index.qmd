@@ -110,7 +110,7 @@ moran.test(hunan$GDPPC,
 To better understand the result, we will reference the following table.
 
 |                                                                            |                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-|-----------------------|-------------------------------------------------|
+|------------------------|------------------------------------------------|
 | The p-value is not statistically significant.                              | You cannot reject the null hypothesis. It is quite possible that the spatial distribution of feature values is the result of random spatial processes. The observed spatial pattern of feature values could very well be one of many, many possible versions of complete spatial randomness (CSR).                                                                                                                                       |
 | The p-value is statistically significant, and the z-score is positive.     | You may reject the null hypothesis. The spatial distribution of high values and/or low values in the dataset is more spatially clustered than would be expected if underlying spatial processes were random.                                                                                                                                                                                                                             |
 | The p-value is statistically significant, and the z-score is not positive. | You may reject the null hypothesis. The spatial distribution of high values and low values in the dataset is more spatially dispersed than would be expected if underlying spatial processes were random. A dispersed spatial pattern often reflects some type of competitive process---a feature with a high value repels other features with high values; similarly, a feature with a low value repels other features with low values. |
@@ -305,7 +305,7 @@ It will be more useful to understand which area Moran's I value is statistically
 hunan.localMI.sub <- hunan.localMI %>%
   filter (Pr.Ii <= 0.05)
 
-tm_shape(hunan.localMI) +
+imap <- tm_shape(hunan.localMI) +
   tm_fill("white") +
   tm_borders("grey", lwd = 0.5, alpha = 0.5) +
   tm_shape(hunan.localMI.sub) +
@@ -317,6 +317,8 @@ tm_shape(hunan.localMI) +
   tm_layout(main.title = "Local Moran I value for p < 0.05",
             main.title.size = 0.7,
             main.title.fontface = "bold")
+
+imap 
 ```
 
 From our plot, we are able to derive that 11 areas have I values that are statically significant, and 2 areas have negative I value which means a dissimilar features.
@@ -342,42 +344,42 @@ In the upper right quadrant, there are cases where both the attribute value and 
 
 ### Preparing LISA map classes
 
-We will now prepare the LISA map classes. We first need to retrieve the quadrant for each area. The
+We will now prepare the LISA map classes. We first need to retrieve the quadrant for each area.
 
 ```{r}
 quadrant <- vector(mode="numeric",length=nrow(localMI))
 ```
 
-Next, we centers the variable of interest around its mean.
+Next, we scale the GDPPC.
 
 ```{r}
-DV <- hunan$GDPPC - mean(hunan$GDPPC)     
+DV <- scale(hunan.localMI$GDPPC)   
 ```
 
-This is follow by centering the local Moran's around the mean.
+This is follow by finding the lag of the scaled GDPPC.
 
 ```{r}
-C_mI <- localMI[,1] - mean(localMI[,1])    
+C_mI <- lag.listw(rswm_q, DV)   
 ```
 
-Next, we will set a statistical significance level ($\alpha$) for the local Moran. (can be 0.05, 0.01 or 0.001)
+Using the Moran Scatterplot below, we filter all the area with p value < 0.05 and identify significant areas. We can see that the plot below is align with our Moran I plot where there are a total of 11 significant areas, 2 areas that are outliers (LH), and 9 areas that are clusters (7 HH and 2 LL).
 
 ```{r}
-signif <- 0.05       
+MIplot <- data.frame(cbind(DV,C_mI,localMI[,5]))
+MIplot <- MIplot %>%
+  filter (X3 < 0.05)
+plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot PPOV", xlab = "scaled GDDPC", ylab = "Lag scaled GDPPC")
+abline(h = 0, v = 0)
 ```
 
-We will then define the quadrant based on the following criteria:
+We will now then define the quadrant based on the following criteria and place non-significant Moran (p value < 0.05) in the category 0.:
 
 ```{r}
+signif <- 0.05 
 quadrant[DV >0 & C_mI>0] <- 4      
 quadrant[DV <0 & C_mI<0] <- 1      
 quadrant[DV <0 & C_mI>0] <- 2
 quadrant[DV >0 & C_mI<0] <- 3
-```
-
-Lastly, places non-significant Moran in the category 0.
-
-```{r}
 quadrant[localMI[,5]>signif] <- 0
 ```
 
@@ -386,6 +388,7 @@ quadrant[localMI[,5]>signif] <- 0
 Once the quadrant of each area has been decided, we will now plot the LISA map using `tmap`. We will plot both the base map with the GDDPC distribution and the LISA map to better understand the relationship.
 
 ```{r}
+tmap_mode("plot")
 hunan.localMI$quadrant <- quadrant
 colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
 clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
@@ -394,8 +397,7 @@ lisamap <- tm_shape(hunan.localMI) +
   tm_fill(col = "quadrant", 
           style = "cat", 
           palette = colors[c(sort(unique(quadrant)))+1], 
-          labels = clusters[c(sort(unique(quadrant)))+1],
-          popup.vars = c("")) +
+          labels = clusters[c(sort(unique(quadrant)))+1]) +
   tm_view(set.zoom.limits = c(11,17)) +
   tm_borders(alpha=0.5) +
   tm_layout(main.title = "LISA Map with Quadrant", main.title.size = 0.7,
@@ -409,8 +411,10 @@ basemap <- tm_shape(hunan) +
   tm_layout(main.title = "GDDPC using Quantile classification", main.title.size = 0.7,
             main.title.fontface = "bold", main.title.position = "center")
 
-tmap_arrange(basemap, lisamap, asp=1, ncol=2)
+tmap_arrange (imap,lisamap,basemap)
 ```
+
+Based on the map plot above, we can see that the Moran I value map provide us with insights on which areas are consider outliers or clusters. The LISA map provide us with more in-depth information on whether the outliers are HL or LH and whether the clusters are HH or LL. These attributes can further be confirmed by referencing the base map on the right.
 
 ## Hot Spot and Cold Spot Area Analysis
 
@@ -438,7 +442,7 @@ There are two type of distance-based proximity matrix, they are:
 
 -   adaptive distance weight matrix
 
-These methods were explained on the previous post and therefore will not be elaborated here. 
+These methods were explained on the previous post and therefore will not be elaborated here.
 
 The code chunk below is to generate the fixed distance weight matrix:
 

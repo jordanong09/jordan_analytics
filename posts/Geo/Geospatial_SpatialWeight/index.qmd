@@ -453,8 +453,7 @@ b_weights <- lapply(wm_q_self, function(x) 0*x + 1)
 b_weights[1]
 ```
 
-From the result, we can see now the first area instead of **5** neighbours, it has **6** neighbours which include itself.
-We will now retrieve the spatial window sum and combine it with our exisiting `Hunan` dataframe.
+From the result, we can see now the first area instead of **5** neighbours, it has **6** neighbours which include itself. We will now retrieve the spatial window sum and combine it with our exisiting `Hunan` dataframe.
 
 ```{r}
 b_weights2 <- nb2listw(wm_q_self, 
@@ -503,4 +502,4 @@ knitr::include_graphics("tmap05.png")
 
 ## Conclusion
 
-This study allow us to understand the different contiguity spatial weights and different methods to utilise the neighbours information. There is no best method but which method suits your analysis of your work. 
+This study allow us to understand the different contiguity spatial weights and different methods to utilise the neighbours information. There is no best method but which method suits your analysis of your work.

@@ -514,8 +514,8 @@ Link number distribution:
 </section><section id="computing-fixed-distance-weight-matrix" class="level3"><h3 class="anchored" data-anchor-id="computing-fixed-distance-weight-matrix">Computing fixed distance weight matrix</h3>
 <p>Now, we will compute the distance weight matrix by using <em>dnearneigh()</em> as shown in the code chunk below.</p>
 <div class="cell">
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">wm_d62</span> <span class="op">&lt;-</span> <span class="fu">dnearneigh</span><span class="op">(</span><span class="va">coords</span>, <span class="fl">0</span>, <span class="fl">59</span><span class="op">)</span>
-<span class="va">wm_d62</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">wm_d59</span> <span class="op">&lt;-</span> <span class="fu">dnearneigh</span><span class="op">(</span><span class="va">coords</span>, <span class="fl">0</span>, <span class="fl">59</span><span class="op">)</span>
+<span class="va">wm_d59</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Neighbour list object:
 Number of regions: 88 
@@ -527,7 +527,7 @@ Average number of links: 3.386364 </code></pre>
 <p>The report shows that on average, every area should have at least 3 neighbours (links).</p>
 <p>To display the structure of the weight matrix is to combine <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/table"><em>table()</em></a> and <a href="https://r-spatial.github.io/spdep/reference/card.html"><em>card()</em></a> of spdep.</p>
 <div class="cell">
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span>, <span class="fu">card</span><span class="op">(</span><span class="va">wm_d62</span><span class="op">)</span><span class="op">)</span>,<span class="fl">10</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span>, <span class="fu">card</span><span class="op">(</span><span class="va">wm_d59</span><span class="op">)</span><span class="op">)</span>,<span class="fl">10</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>           
             1 2 3 4 5 6
@@ -550,7 +550,7 @@ Average number of links: 3.386364 </code></pre>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">geometry</span>, border<span class="op">=</span><span class="st">"lightgrey"</span>, main<span class="op">=</span><span class="st">"1st nearest neighbours"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">k1</span>, <span class="va">coords</span>, add<span class="op">=</span><span class="cn">TRUE</span>, col<span class="op">=</span><span class="st">"red"</span>, length<span class="op">=</span><span class="fl">0.08</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">geometry</span>, border<span class="op">=</span><span class="st">"lightgrey"</span>, main<span class="op">=</span><span class="st">"Distance link"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">wm_d62</span>, <span class="va">coords</span>, add<span class="op">=</span><span class="cn">TRUE</span>, pch <span class="op">=</span> <span class="fl">19</span>, cex <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">wm_d59</span>, <span class="va">coords</span>, add<span class="op">=</span><span class="cn">TRUE</span>, pch <span class="op">=</span> <span class="fl">19</span>, cex <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
 </div>

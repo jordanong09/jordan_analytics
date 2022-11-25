@@ -1,0 +1,260 @@
+---
+title: "Geospatial Analytics for Social Good - Understanding Nigeria Water functional and non-functional water point rate"
+subtitle: Geospatial analytics hold tremendous potential to address complex problems facing society. In this study, you are tasked to apply appropriate global and local measures of spatial Association techniques to reveals the spatial patterns of Not Functional water points. For the purpose of this study, Nigeria will be used as the study country.
+author: "Ong Zhi Rong Jordan"
+date: 2022-11-25
+categories:
+  - geospatial
+  - sf
+  - spdep
+  - tmap
+image: "nigeria.png"
+toc: true
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Introduction
+
+The Spatial Autocorrelation measures spatial autocorrelation based on feature locations and feature values simultaneously. Given a set of features and an associated attribute, it evaluates whether the expressed pattern is clustered, scattered, or random. The tool calculates the Moran's I index value as well as a z-score and p-value to assess the significance of this index. P-values are numerical approximations of the area under the curve for a known distribution, bounded by the test statistic.
+
+In this study we will explore the computation of Global and Local Measure of Spatial Autocorrelation (GLSA) by using **spdep** package.
+
+## Libraries
+
+For this study, we will use the following packages from CRAN.
+
+-   [`sf`](https://cloud.r-project.org/web/packages/sf/index.html) - Support for simple features, a standardized way to encode spatial vector data. Binds to 'GDAL' for reading and writing data, to 'GEOS' for geometrical operations, and to 'PROJ' for projection conversions and datum transformations. Uses by default the 's2' package for spherical geometry operations on ellipsoidal (long/lat) coordinates.
+-   [`tidyverse`](https://www.tidyverse.org/packages/) - Loading the core tidyverse packages which will be used for data wrangling and visualisation.
+-   [`tmap`](https://cran.r-project.org/web/packages/tmap/index.html) - Thematic maps are geographical maps in which spatial data distributions are visualized. This package offers a flexible, layer-based, and easy to use approach to create thematic maps, such as choropleths and bubble maps.
+-   [`spdep`](https://cran.r-project.org/web/packages/spdep/index.html) - A collection of functions to create spatial weights matrix objects from polygon 'contiguities', from point patterns by distance and tessellations, for summarizing these objects, and for permitting their use in spatial data analysis, including regional aggregation by minimum spanning tree; a collection of tests for spatial 'autocorrelation'
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse)
+```
+
+## Data Preparation
+
+Two dataset will be used for this study:
+
+-   Nigeria.shp: A shapefile of Nigeria that consist of all the Level-2 Administrative Boundary (also known as Local Government Area) 
+-   NigeriaAttribute.csv: A csv file containing multiple attributes of each Level-2 Administrative Boundary
+
+### Importing of data
+
+We will use the *st_read* to import the shape file and *read_csv* to import the aspatial data into the R environment. We will then use a relational join *left_join* to combine the spatial and aspatial data together.
+
+```{r, eval = FALSE}
+nigeria <- st_read(dsn = "data", 
+                 layer = "geoBoundaries-NGA-ADM2")
+
+nigeriaA <- read_csv("data/nigeriaattribute.csv")
+
+```
+
+```{r, eval = FALSE}
+nigeriaT <- nigeriaA %>%
+  rename ("Country" = "#clean_country_name",
+          "clean_adm2" = "#clean_adm2",
+          "status" = "#status_clean",
+          "lat" = "#lat_deg",
+          "long" = "#lon_deg") %>%
+  filter (Country == "Nigeria" & !is.na(status)) %>%
+  select (clean_adm2,status,lat,long)
+
+nigeria <- nigeria %>%
+  st_transform(crs = 26391)
+
+nigeriaT_sf <- st_as_sf(nigeriaT, coords = c("long", "lat"),  crs = 4326)
+nigeriaT_sf <- st_transform(nigeriaT_sf, crs = 26391)
+
+st_crs (nigeria)
+st_crs (nigeriaT_sf)
+```
+
+```{r, eval = FALSE}
+nigeriaT_sf$status <- gsub("([A-Za-z]+).*", "\\1", nigeriaT_sf$status)
+unique(nigeriaT_sf$status)
+```
+
+```{r, eval = FALSE}
+nigeria$functional <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Functional",]))
+nigeria$nonfunctional <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status != "Functional",]))
+```
+
+```{r, echo = FALSE}
+nigeria <- readRDS ("data/nigeria.rds")
+```
+
+```{r}
+f <- qtm(nigeria, "functional")
+nf <- qtm(nigeria, "nonfunctional")
+
+tmap_arrange(f,nf,ncol = 2)
+```
+
+### Computing Contiguity Spatial Weights
+
+For this study, we will be using the Queen contiguity weight matrix. The code chunk below will construct the weight matrix and subsequently implement the row-standardised weight matrix using the `nb2listw()` function.
+
+```{r}
+wm_q <- poly2nb(nigeria, 
+                queen=TRUE)
+
+set.ZeroPolicyOption(TRUE)
+
+rswm_q <- nb2listw(wm_q, 
+                   style="W", 
+                   zero.policy = TRUE)
+rswm_q
+```
+
+### Global Spatial Autocorrelation: Moran's I
+
+We will now perform Moran's I statistics testing by using the [*moran.test()*](https://r-spatial.github.io/spdep/reference/moran.test.html) from **spdep**.
+
+```{r}
+moran.test(nigeria$nonfunctional, 
+           listw=rswm_q, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+#### Computing Monte Carlo Moran's I
+
+The code chunk below performs permutation test for Moran's I statistic by using [`moran.mc()`](https://r-spatial.github.io/spdep/reference/moran.mc.html) of spdep. A total of 1000 simulation will be performed.
+
+```{r}
+set.seed(1234)
+bperm= moran.mc(nigeria$nonfunctional, 
+                listw=rswm_q, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm
+```
+
+#### Visualising Monte Carlo Moran's I
+
+We will use a density plot to visualise the output of the Monte Carlo Moran's I. First, we need to extract the `res` value and convert it into a dataframe. We then visualise the test statistic result using `geom_density` from the ggplot package.
+
+```{r}
+monte_carlo <- as.data.frame(bperm[7])
+
+ggplot(monte_carlo, aes(x=res)) + 
+  geom_density(fill="lightblue") +
+  geom_vline(aes(xintercept=0.43393),
+            color="blue", linetype="dashed", size=1) +
+  labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
+  theme_minimal() 
+```
+
+## Spatial Correlogram
+
+A nonparametric spatial correlogram is another measure of overall spatial autocorrelation that does not rely on specifying a matrix of spatial weights. Instead, a local regression is fitted to the calculated covariances or correlations for all pairs of observations based on the distance between them. They show how correlated are pairs of spatial observations when you increase the distance (lag) between them - they are plots of some index of autocorrelation (Moran's I or Geary's c) against distance.Although correlograms are not as fundamental as variograms (a keystone concept of geostatistics), they are very useful as an exploratory and descriptive tool. For this purpose they actually provide richer information than variograms.
+
+### Compute Moran's I correlogram
+
+We will utilise the sp.correlogram() function from the spdep package and compute a 6-lag spatial correlogram of GDPPC. We then use the `plot()` and `print()` function to visualise the output.
+
+We will illustrate the Moran's I correlogram.
+
+```{r}
+MI_corr <- sp.correlogram(wm_q, 
+                          nigeria$nonfunctional, 
+                          order=6, 
+                          method="I", 
+                          style="W")
+plot(MI_corr)
+print(MI_corr)
+```
+
+### Computing local Moran's I
+
+To compute local Moran's I, the [*localmoran()*](https://r-spatial.github.io/spdep/reference/localmoran.html) function of **spdep** will be used. It computes *Ii* values, given a set of *zi* values and a listw object providing neighbour weighting information for the polygon associated with the zi values.
+
+```{r}
+fips <- order(nigeria$shapeName)
+localMI <- localmoran(nigeria$nonfunctional, rswm_q)
+head(localMI)
+```
+
+### Mapping the local Moran's I
+
+We have to combine the local Moran's dataframe with the our exisiting `Nigeria` spatialdataframe before plotting. We will use the `cbind()` function.
+
+```{r}
+nigeria.localMI <- cbind(nigeria,localMI) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+```
+
+### Mapping local Moran's I values
+
+Using choropleth mapping functions of tmap package, we can plot the local Moran's I values by using the code chinks below.
+
+```{r}
+tm_shape(nigeria.localMI) +
+  tm_fill(col = "Ii", 
+          style = "pretty",
+          palette = "RdBu",
+          title = "Local Moran I value") +
+  tm_borders(alpha = 0.5)
+```
+
+```{r}
+
+nigeria.localMI.sub <- nigeria.localMI %>%
+  filter (Pr.Ii <= 0.05)
+
+tm_shape(nigeria.localMI) +
+  tm_fill("white") +
+  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
+  tm_shape(nigeria.localMI.sub) +
+  tm_fill (col = "Ii",
+           style = "pretty",
+           palette = "RdBu",
+           title = "Local Moran I value") +
+  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
+  tm_layout(main.title = "Local Moran I value for p < 0.05",
+            main.title.size = 0.7,
+            main.title.fontface = "bold")
+```
+
+## Creating a LISA Cluster Map
+
+The LISA Cluster Map shows the significant locations color coded by type of spatial autocorrelation. The first step before we can generate the LISA cluster map is to plot the Moran scatterplot.
+
+### Plotting Moran scatterplot
+
+The Moran scatterplot is an illustration of the relationship between the values of the chosen attribute at each location and the average value of the same attribute at neighboring locations.
+
+The code chunk below plots the Moran scatterplot of Non Functional Water Point by using [*moran.plot()*](https://r-spatial.github.io/spdep/reference/moran.plot.html) of **spdep**.
+
+```{r}
+nci <- moran.plot(nigeria$nonfunctional, rswm_q,
+                  labels=as.character(nigeria$shapeName), 
+                  xlab="Non Functional Water Point", 
+                  ylab="Spatially Lag Non Functional Water Point")
+```
+
+### Preparing LISA map classes
+
+We will now prepare the LISA map classes. We first need to retrieve the quadrant for each area. We will center the variable of interest and local Moran's I around their mean. Subsequently, set a statistical significance level for our analysis and create the quadrant for categorising each area. Non-significant area with a p value of \> 0.05 will not be categorised.
+
+```{r}
+quadrant <- vector(mode="numeric",length=nrow(localMI))
+DV <- nigeria$nonfunctional - mean(nigeria$nonfunctional)
+C_mI <- localMI[,1] - mean(localMI[,1])
+signif <- 0.05
+quadrant[DV >0 & C_mI>0] <- 4      
+quadrant[DV <0 & C_mI<0] <- 1      
+quadrant[DV <0 & C_mI>0] <- 2
+quadrant[DV >0 & C_mI<0] <- 3
+quadrant[localMI[,5]>signif] <- 0
+```
