@@ -220,6 +220,34 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><a href="https://cran.r-project.org/web/packages/cluster/index.html"><code>cluster</code></a> - Methods for Cluster analysis. Much extended the original from Peter Rousseeuw, Anja Struyf and Mia Hubert, based on Kaufman and Rousseeuw (1990) “Finding Groups in Data”.<br><a href="https://www.tidyverse.org/packages/"><code>tidyverse</code></a> - Loading the core tidyverse packages which will be used for data wrangling and visualisation.<br><a href="https://cran.r-project.org/web/packages/factoextra/readme/README.html#:~:text=The%20R%20package%20factoextra%20has,data%20visualization%20with%20less%20typing."><code>factoextra</code></a> - Extract and Visualize the Results of Multivariate Data Analyses. <a href="https://ggobi.github.io/ggally/"><code>GGally</code></a> Extension of <code>ggplot2</code> by adding several functions to reduce the complexity of combining geometric objects with transformed data.</p>
 <div class="cell">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">pacman</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pacman/man/p_load.html">p_load</a></span><span class="op">(</span><span class="va">cluster</span>, <span class="va">tidyverse</span>, <span class="va">factoextra</span>,<span class="va">lubridate</span>,<span class="va">patchwork</span>, <span class="va">GGally</span>, <span class="va">moments</span>,<span class="va">bestNormalize</span><span class="op">)</span> <span class="co">#refer to 1st post to understand the usage of pacman</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>package 'estimability' successfully unpacked and MD5 sums checked
+package 'ellipse' successfully unpacked and MD5 sums checked
+package 'emmeans' successfully unpacked and MD5 sums checked
+package 'flashClust' successfully unpacked and MD5 sums checked
+package 'leaps' successfully unpacked and MD5 sums checked
+package 'scatterplot3d' successfully unpacked and MD5 sums checked
+package 'FactoMineR' successfully unpacked and MD5 sums checked
+package 'factoextra' successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+    C:\Users\jorda\AppData\Local\Temp\RtmpesZQVK\downloaded_packages
+package 'GGally' successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+    C:\Users\jorda\AppData\Local\Temp\RtmpesZQVK\downloaded_packages
+package 'lamW' successfully unpacked and MD5 sums checked
+package 'rngtools' successfully unpacked and MD5 sums checked
+package 'lobstr' successfully unpacked and MD5 sums checked
+package 'LambertW' successfully unpacked and MD5 sums checked
+package 'nortest' successfully unpacked and MD5 sums checked
+package 'doRNG' successfully unpacked and MD5 sums checked
+package 'butcher' successfully unpacked and MD5 sums checked
+package 'bestNormalize' successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+    C:\Users\jorda\AppData\Local\Temp\RtmpesZQVK\downloaded_packages</code></pre>
+</div>
 </div>
 </section><section id="data-set" class="level2"><h2 class="anchored" data-anchor-id="data-set">Data Set</h2>
 <ul>
@@ -235,7 +263,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </li>
 </ul></section><section id="data-wrangling" class="level2"><h2 class="anchored" data-anchor-id="data-wrangling">Data Wrangling</h2>
 <div class="cell">
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span><span class="st">"data/customer.rds"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span><span class="st">"data/customer.rds"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s examine the data!</p>
 <p>From the summary, we can identify a few potential problems!</p>
@@ -247,7 +275,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>TotalPrice is not in numeric (the symbol was attached to the number)</li>
 </ul>
 <div class="cell">
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span> <span class="op">(</span><span class="va">customer</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span> <span class="op">(</span><span class="va">customer</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  Customer_ID    CategoryGroup        Category         InvoiceDate       
  Min.   :12348   Length:395888      Length:395888      Length:395888     
@@ -264,7 +292,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
  3rd Qu.:  12.00                     
  Max.   :1500.00                     </code></pre>
 </div>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">customer</span><span class="op">$</span><span class="va">TotalPrice</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">customer</span><span class="op">$</span><span class="va">TotalPrice</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "£8" "£2" "£1" "£3" "£3" "£5"</code></pre>
 </div>
@@ -272,7 +300,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="change-of-data-class" class="level3"><h3 class="anchored" data-anchor-id="change-of-data-class">Change of data class</h3>
 <p>For the date time format, we will leverage on lubridate functions to convert our exisiting date to date time format. Since the format is Month/Day/Year, we will use the function <code>mdy</code>. For TotalPrice, there are two symbols found, <code>£</code> and <code>,</code>. We will use the <code>gsub</code> function and replace all symbols to an empty space. Lastly, using <code>as.numeric</code> to convert it to a numeric class. For CustomerID, simply use <code>as.character</code> to convert it to character class.</p>
 <div class="cell">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer</span><span class="op">$</span><span class="va">InvoiceDate</span> <span class="op">&lt;-</span> <span class="fu">mdy</span><span class="op">(</span><span class="va">customer</span><span class="op">$</span><span class="va">InvoiceDate</span><span class="op">)</span>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer</span><span class="op">$</span><span class="va">InvoiceDate</span> <span class="op">&lt;-</span> <span class="fu">mdy</span><span class="op">(</span><span class="va">customer</span><span class="op">$</span><span class="va">InvoiceDate</span><span class="op">)</span>
 <span class="va">customer</span><span class="op">$</span><span class="va">TotalPrice</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span><span class="st">"[£]|[,]"</span>,<span class="st">""</span>,<span class="va">customer</span><span class="op">$</span><span class="va">TotalPrice</span>, perl<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>
 <span class="va">customer</span><span class="op">$</span><span class="va">Customer_ID</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html">as.character</a></span><span class="op">(</span><span class="va">customer</span><span class="op">$</span><span class="va">Customer_ID</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -280,7 +308,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="recency" class="level4"><h4 class="anchored" data-anchor-id="recency">Recency</h4>
 <p>To extract how recent the customer purchase an item from the store, we will use the last <code>InvoiceDate</code> to substract all the dates a customer purchase from the store and retrieve the minimum number. Since the format of <code>Recency</code> will be in datetime format, we will convert it using the <code>as.numeric</code> function.</p>
 <div class="cell">
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_recency</span> <span class="op">&lt;-</span> <span class="va">customer</span> <span class="op">%&gt;%</span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_recency</span> <span class="op">&lt;-</span> <span class="va">customer</span> <span class="op">%&gt;%</span>
   <span class="fu">mutate</span><span class="op">(</span>recency <span class="op">=</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">InvoiceDate</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">-</span> <span class="va">InvoiceDate</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">group_by</span><span class="op">(</span><span class="va">Customer_ID</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">summarise</span> <span class="op">(</span>Recency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">recency</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -288,7 +316,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section><section id="frequency" class="level4"><h4 class="anchored" data-anchor-id="frequency">Frequency</h4>
 <p>To extract how frequent the customer purchase an item from the store, we will use the <code>n()</code> function to find out how many different dates the customer visited the store.</p>
 <div class="cell">
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_frequency</span> <span class="op">&lt;-</span> <span class="va">customer</span> <span class="op">%&gt;%</span>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_frequency</span> <span class="op">&lt;-</span> <span class="va">customer</span> <span class="op">%&gt;%</span>
   <span class="fu">group_by</span><span class="op">(</span><span class="va">Customer_ID</span>,<span class="va">InvoiceDate</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">summarise</span> <span class="op">(</span>count <span class="op">=</span> <span class="fu">n</span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">ungroup</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span>
@@ -297,18 +325,18 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <span class="fu">ungroup</span><span class="op">(</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_monetary</span> <span class="op">&lt;-</span> <span class="va">customer</span> <span class="op">%&gt;%</span>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_monetary</span> <span class="op">&lt;-</span> <span class="va">customer</span> <span class="op">%&gt;%</span>
   <span class="fu">group_by</span><span class="op">(</span><span class="va">Customer_ID</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">summarise</span> <span class="op">(</span>Monetary <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">TotalPrice</span><span class="op">)</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_RFM</span> <span class="op">&lt;-</span> <span class="va">customer_recency</span> <span class="op">%&gt;%</span>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_RFM</span> <span class="op">&lt;-</span> <span class="va">customer_recency</span> <span class="op">%&gt;%</span>
   <span class="fu">left_join</span> <span class="op">(</span><span class="va">customer_frequency</span>, by <span class="op">=</span> <span class="st">"Customer_ID"</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">left_join</span> <span class="op">(</span><span class="va">customer_monetary</span>, by <span class="op">=</span> <span class="st">"Customer_ID"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section></section><section id="examining-the-distribution-of-the-rfm-model" class="level3"><h3 class="anchored" data-anchor-id="examining-the-distribution-of-the-rfm-model">Examining the distribution of the RFM model</h3>
 <div class="cell">
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># Histogram overlaid with kernel density curve</span>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># Histogram overlaid with kernel density curve</span>
 <span class="va">rdplot</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="va">customer_RFM</span>, <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">Recency</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
     <span class="fu">geom_histogram</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>y<span class="op">=</span><span class="va">..density..</span><span class="op">)</span>,      <span class="co"># Histogram with density instead of count on y-axis</span>
                    binwidth<span class="op">=</span><span class="fl">10</span>,
@@ -347,33 +375,33 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <p>Through the skewness and the histogrm, we can conclude that the attributes does not conform to normal distribution. Since all three attributes does not conform to a normal distribution and K-means would perform better with a normal distributed data, we will conduct data transformation. Utilizing the <code>bestNormalise</code> library, we can identify which normalization techniques best suits each attributes based on their distribution.</p>
 <div class="cell">
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">skewness</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Recency</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">skewness</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Recency</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.7240294</code></pre>
 </div>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">skewness</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Frequency</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">skewness</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Frequency</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 3.781094</code></pre>
 </div>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">skewness</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Monetary</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">skewness</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Monetary</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1.435198</code></pre>
 </div>
 </div>
 <p>We can</p>
 <div class="cell">
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">bestNormalize</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Recency</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">bestNormalize</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Recency</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 5010 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 11.1308
- - Box-Cox: 8.203
- - Center+scale: 28.4903
+ - arcsinh(x): 11.2249
+ - Box-Cox: 7.8746
+ - Center+scale: 27.8779
  - Exp(x): 22.7727
- - Log_b(x+a): 11.1712
- - orderNorm (ORQ): 1.1137
- - sqrt(x + a): 10.3142
- - Yeo-Johnson: 8.3977
+ - Log_b(x+a): 11.2725
+ - orderNorm (ORQ): 1.1695
+ - sqrt(x + a): 10.1741
+ - Yeo-Johnson: 8.0219
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -383,18 +411,18 @@ orderNorm Transformation with 5010 nonmissing obs and ties
   0%  25%  50%  75% 100% 
    1   32  121  382  676 </code></pre>
 </div>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">bestNormalize</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Frequency</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">bestNormalize</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Frequency</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 5010 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 82.7576
- - Box-Cox: 83.2959
- - Center+scale: 82.3867
+ - arcsinh(x): 82.5826
+ - Box-Cox: 83.172
+ - Center+scale: 82.3083
  - Exp(x): 74.932
- - Log_b(x+a): 82.7547
- - orderNorm (ORQ): 82.2905
- - sqrt(x + a): 82.732
- - Yeo-Johnson: 83.5991
+ - Log_b(x+a): 82.5978
+ - orderNorm (ORQ): 82.2105
+ - sqrt(x + a): 82.6232
+ - Yeo-Johnson: 83.3307
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -403,17 +431,17 @@ Standardized exp(x) Transformation with 5010 nonmissing obs.:
  - mean (before standardization) = 2.741283e+28 
  - sd (before standardization) = 1.940317e+30 </code></pre>
 </div>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">bestNormalize</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Monetary</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">bestNormalize</span><span class="op">(</span><span class="va">customer_RFM</span><span class="op">$</span><span class="va">Monetary</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Best Normalizing transformation with 5010 Observations
  Estimated Normality Statistics (Pearson P / df, lower =&gt; more normal):
- - arcsinh(x): 2.4536
- - Box-Cox: 1.7519
- - Center+scale: 20.535
- - Log_b(x+a): 2.4542
- - orderNorm (ORQ): 1.1424
- - sqrt(x + a): 5.4938
- - Yeo-Johnson: 1.7558
+ - arcsinh(x): 2.3416
+ - Box-Cox: 1.8263
+ - Center+scale: 20.5024
+ - Log_b(x+a): 2.3412
+ - orderNorm (ORQ): 1.199
+ - sqrt(x + a): 5.5771
+ - Yeo-Johnson: 1.815
 Estimation method: Out-of-sample via CV with 10 folds and 5 repeats
  
 Based off these, bestNormalize chose:
@@ -425,7 +453,7 @@ orderNorm Transformation with 5010 nonmissing obs and ties
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_RFM_dt</span> <span class="op">&lt;-</span> <span class="va">customer_RFM</span> <span class="op">%&gt;%</span>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_RFM_dt</span> <span class="op">&lt;-</span> <span class="va">customer_RFM</span> <span class="op">%&gt;%</span>
   <span class="fu">select</span><span class="op">(</span><span class="va">Recency</span>, <span class="va">Frequency</span>, <span class="va">Monetary</span><span class="op">)</span>
 
 <span class="va">Recency</span> <span class="op">&lt;-</span> <span class="fu">orderNorm</span><span class="op">(</span><span class="va">customer_RFM_dt</span><span class="op">$</span><span class="va">Recency</span><span class="op">)</span>
@@ -440,17 +468,17 @@ orderNorm Transformation with 5010 nonmissing obs and ties
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.01507482</code></pre>
 </div>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">skewness</span><span class="op">(</span><span class="va">customer_RFM_dt</span><span class="op">$</span><span class="va">Frequency</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">skewness</span><span class="op">(</span><span class="va">customer_RFM_dt</span><span class="op">$</span><span class="va">Frequency</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.08897177</code></pre>
 </div>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">skewness</span><span class="op">(</span><span class="va">customer_RFM_dt</span><span class="op">$</span><span class="va">Monetary</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">skewness</span><span class="op">(</span><span class="va">customer_RFM_dt</span><span class="op">$</span><span class="va">Monetary</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.0006851529</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># Histogram overlaid with kernel density curve</span>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># Histogram overlaid with kernel density curve</span>
 <span class="va">rdplot_dt</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="va">customer_RFM_dt</span>, <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">Recency</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
     <span class="fu">geom_histogram</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>y<span class="op">=</span><span class="va">..density..</span><span class="op">)</span>,      <span class="co"># Histogram with density instead of count on y-axis</span>
                    colour<span class="op">=</span><span class="st">"black"</span>, fill<span class="op">=</span><span class="st">"white"</span><span class="op">)</span> <span class="op">+</span>
@@ -485,26 +513,26 @@ orderNorm Transformation with 5010 nonmissing obs and ties
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_RFM_cluster</span> <span class="op">&lt;-</span> <span class="va">customer_RFM_dt</span> <span class="op">%&gt;%</span>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_RFM_cluster</span> <span class="op">&lt;-</span> <span class="va">customer_RFM_dt</span> <span class="op">%&gt;%</span>
   <span class="fu">select</span><span class="op">(</span><span class="va">Recency</span>, <span class="va">Frequency</span>, <span class="va">Monetary</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section><section id="k-means-clustering" class="level3"><h3 class="anchored" data-anchor-id="k-means-clustering">K-means Clustering</h3>
 <p>To identify the optimal number of clusters using K means clustering, we will use the <code>fviz_nbclust</code> function and the <code>silhouette</code> and <code>wss</code>. Based on the silhouette score, the optimal cluster is 2 while the WSS score shows either 2 or 3. We will now explore both cluster size.</p>
 <div class="cell">
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span>
 
 <span class="fu">fviz_nbclust</span><span class="op">(</span><span class="va">customer_RFM_cluster</span>, <span class="va">kmeans</span>, method <span class="op">=</span> <span class="st">"silhouette"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
 </div>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">fviz_nbclust</span><span class="op">(</span><span class="va">customer_RFM_cluster</span>, <span class="va">kmeans</span>, method <span class="op">=</span> <span class="st">"wss"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">fviz_nbclust</span><span class="op">(</span><span class="va">customer_RFM_cluster</span>, <span class="va">kmeans</span>, method <span class="op">=</span> <span class="st">"wss"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-16-2.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section><section id="insights-from-cluster" class="level3"><h3 class="anchored" data-anchor-id="insights-from-cluster">Insights from Cluster</h3>
 <div class="cell">
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">km_cluster2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html">kmeans</a></span><span class="op">(</span><span class="va">customer_RFM_cluster</span>, 
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">km_cluster2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html">kmeans</a></span><span class="op">(</span><span class="va">customer_RFM_cluster</span>, 
                      <span class="fl">2</span>, 
                      nstart <span class="op">=</span> <span class="fl">25</span><span class="op">)</span>
 
@@ -520,7 +548,7 @@ orderNorm Transformation with 5010 nonmissing obs and ties
 </div>
 <p>From the table, we can identify that cluster 1 consist of customers on average made a purchase within 94 days, frequent the store 5 times and spend 1.7k. Whereas for cluster 2, the customers recency period on average is about 325 days, frequent on average 1 time and spend about $392. We can say that cluster 1 consist of our high value customers and cluster 2 consist of potential churn customers.</p>
 <div class="cell">
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_RFM</span> <span class="op">%&gt;%</span>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_RFM</span> <span class="op">%&gt;%</span>
   <span class="fu">group_by</span><span class="op">(</span><span class="va">km_cluster2</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">summarise</span><span class="op">(</span>mean_recency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">Recency</span><span class="op">)</span>,
             mean_frequency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">Frequency</span><span class="op">)</span>,
@@ -533,7 +561,7 @@ orderNorm Transformation with 5010 nonmissing obs and ties
 1 1                   94.1           5.45         1774.    2595
 2 2                  326.            1.39          393.    2415</code></pre>
 </div>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_RFM</span> <span class="op">%&gt;%</span>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">customer_RFM</span> <span class="op">%&gt;%</span>
   <span class="fu">group_by</span><span class="op">(</span><span class="va">km_cluster3</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">summarise</span><span class="op">(</span>mean_recency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">Recency</span><span class="op">)</span>,
             mean_frequency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">Frequency</span><span class="op">)</span>,
@@ -550,7 +578,7 @@ orderNorm Transformation with 5010 nonmissing obs and ties
 </div>
 <p>To better visualise the distribution of our customers based on their cluster, we will leverage on the <code>ggparcoord</code> to visualise the distribution using a parallel coordinates plot.</p>
 <div class="cell">
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># Plot</span>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># Plot</span>
 <span class="fu">ggparcoord</span><span class="op">(</span><span class="va">customer_RFM</span>,
     columns <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>, groupColumn <span class="op">=</span> <span class="fl">5</span>,
     showPoints <span class="op">=</span> <span class="cn">TRUE</span>,

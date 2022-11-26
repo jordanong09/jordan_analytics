@@ -34,16 +34,17 @@ For this study, we will use the following packages from CRAN.
 -   [`tidyverse`](https://www.tidyverse.org/packages/) - Loading the core tidyverse packages which will be used for data wrangling and visualisation.
 -   [`tmap`](https://cran.r-project.org/web/packages/tmap/index.html) - Thematic maps are geographical maps in which spatial data distributions are visualized. This package offers a flexible, layer-based, and easy to use approach to create thematic maps, such as choropleths and bubble maps.
 -   [`spdep`](https://cran.r-project.org/web/packages/spdep/index.html) - A collection of functions to create spatial weights matrix objects from polygon 'contiguities', from point patterns by distance and tessellations, for summarizing these objects, and for permitting their use in spatial data analysis, including regional aggregation by minimum spanning tree; a collection of tests for spatial 'autocorrelation'
+-   [`funModeling`](https://github.com/pablo14/funModeling) - This package contains a set of functions related to exploratory data analysis, data preparation, and model performance. It is used by people coming from business, research, and teaching (professors and students).
 
 ```{r}
-pacman::p_load(sf, spdep, tmap, tidyverse)
+pacman::p_load(sf, spdep, tmap, tidyverse,funModeling)
 ```
 
 ## Data Preparation
 
 Two dataset will be used for this study:
 
--   Nigeria.shp: A shapefile of Nigeria that consist of all the Level-2 Administrative Boundary (also known as Local Government Area) 
+-   Nigeria.shp: A shapefile of Nigeria that consist of all the Level-2 Administrative Boundary (also known as Local Government Area)
 -   NigeriaAttribute.csv: A csv file containing multiple attributes of each Level-2 Administrative Boundary
 
 ### Importing of data
@@ -54,19 +55,19 @@ We will use the *st_read* to import the shape file and *read_csv* to import the 
 nigeria <- st_read(dsn = "data", 
                  layer = "geoBoundaries-NGA-ADM2")
 
-nigeriaA <- read_csv("data/nigeriaattribute.csv")
+nigeria_attribute <- read_csv("data/nigeriaattribute.csv")
 
 ```
 
 ```{r, eval = FALSE}
-nigeriaT <- nigeriaA %>%
+nigeriaT <- nigeria_attribute  %>%
   rename ("Country" = "#clean_country_name",
           "clean_adm2" = "#clean_adm2",
           "status" = "#status_clean",
           "lat" = "#lat_deg",
           "long" = "#lon_deg") %>%
-  filter (Country == "Nigeria" & !is.na(status)) %>%
-  select (clean_adm2,status,lat,long)
+  select (clean_adm2,status,lat,long) %>%
+  mutate(status = replace_na(status, "Unknown"))
 
 nigeria <- nigeria %>%
   st_transform(crs = 26391)
@@ -78,6 +79,13 @@ st_crs (nigeria)
 st_crs (nigeriaT_sf)
 ```
 
+Visualising of distribution using funModeling
+
+```{r}
+freq(nigeriaT_sf$status)
+```
+
+
 ```{r, eval = FALSE}
 nigeriaT_sf$status <- gsub("([A-Za-z]+).*", "\\1", nigeriaT_sf$status)
 unique(nigeriaT_sf$status)
@@ -86,6 +94,12 @@ unique(nigeriaT_sf$status)
 ```{r, eval = FALSE}
 nigeria$functional <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Functional",]))
 nigeria$nonfunctional <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status != "Functional",]))
+nigeria$abandon <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status != "Abandoned",]))
+nigeria$total <- <- lengths(st_intersects(nigeria, nigeriaT_sf))
+```
+
+```{r}
+saveRDS(nigeria, "nigeria.rds")
 ```
 
 ```{r, echo = FALSE}
