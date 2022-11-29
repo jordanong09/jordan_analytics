@@ -68,7 +68,7 @@ hunan <- readRDS("data/rds/hunan.rds")
 
 For the visualisation, we will only be using `tmap` to show the distribution of GDPPC 2021.
 
-```{r, eval=FALSE}
+```{r}
 tm_shape(hunan) +
   tm_fill("GDPPC",
           n = 5,
@@ -80,7 +80,7 @@ tm_shape(hunan) +
 
 ## Global Spatial Autocorrelation
 
-Before we commence with spatial autocorrelation, we need to construct the spatial weights of the study region. The spatial weights is used to define the neighbourhood relationships between the geographical units (i.e. county) in the study area. Refer to my previous post to understand the flow of construsting the spatial weight.
+Before we commence with spatial autocorrelation, we need to construct the spatial weights of the study region. The spatial weights is used to define the neighbourhood relationships between the geographical units (i.e. county) in the study area. Refer to my previous post to understand the flow of constructing the spatial weight.
 
 ### Computing Contiguity Spatial Weights
 
@@ -110,7 +110,7 @@ moran.test(hunan$GDPPC,
 To better understand the result, we will reference the following table.
 
 |                                                                            |                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-|------------------------|------------------------------------------------|
+|-------------------------|-----------------------------------------------|
 | The p-value is not statistically significant.                              | You cannot reject the null hypothesis. It is quite possible that the spatial distribution of feature values is the result of random spatial processes. The observed spatial pattern of feature values could very well be one of many, many possible versions of complete spatial randomness (CSR).                                                                                                                                       |
 | The p-value is statistically significant, and the z-score is positive.     | You may reject the null hypothesis. The spatial distribution of high values and/or low values in the dataset is more spatially clustered than would be expected if underlying spatial processes were random.                                                                                                                                                                                                                             |
 | The p-value is statistically significant, and the z-score is not positive. | You may reject the null hypothesis. The spatial distribution of high values and low values in the dataset is more spatially dispersed than would be expected if underlying spatial processes were random. A dispersed spatial pattern often reflects some type of competitive process---a feature with a high value repels other features with high values; similarly, a feature with a low value repels other features with low values. |
@@ -362,7 +362,7 @@ This is follow by finding the lag of the scaled GDPPC.
 C_mI <- lag.listw(rswm_q, DV)   
 ```
 
-Using the Moran Scatterplot below, we filter all the area with p value < 0.05 and identify significant areas. We can see that the plot below is align with our Moran I plot where there are a total of 11 significant areas, 2 areas that are outliers (LH), and 9 areas that are clusters (7 HH and 2 LL).
+Using the Moran Scatterplot below, we filter all the area with p value \< 0.05 and identify significant areas. We can see that the plot below is align with our Moran I plot where there are a total of 11 significant areas, 2 areas that are outliers (LH), and 9 areas that are clusters (7 HH and 2 LL).
 
 ```{r}
 MIplot <- data.frame(cbind(DV,C_mI,localMI[,5]))
@@ -372,7 +372,7 @@ plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot PPOV", xlab = "scal
 abline(h = 0, v = 0)
 ```
 
-We will now then define the quadrant based on the following criteria and place non-significant Moran (p value < 0.05) in the category 0.:
+We will now then define the quadrant based on the following criteria and place non-significant Moran (p value \< 0.05) in the category 0.:
 
 ```{r}
 signif <- 0.05 
@@ -436,7 +436,7 @@ The analysis consists of three steps:
 
 First, we need to define a new set of neighbours. Whist the spatial autocorrelation considered units which shared borders, for Getis-Ord we are defining neighbours based on distance.
 
-There are two type of distance-based proximity matrix, they are:
+There are two type of , they are:
 
 -   fixed distance weight matrix
 
@@ -465,4 +465,81 @@ knn_lw <- nb2listw(knn, style = 'B')
 
 ## Computing Gi statistics
 
-### 
+### Gi statistics using fixed distance
+
+```{r}
+
+fips <- order(hunan$County)
+gi.fixed <- localG(hunan$GDPPC, wm59_lw)
+gi.fixed
+
+```
+
+The output of localG() is a vector of G or Gstar values, with attributes "gstari" set to TRUE or FALSE, "call" set to the function call, and class "localG".
+
+The Gi statistics is represented as a Z-score. Greater values represent a greater intensity of clustering and the direction (positive or negative) indicates high or low clusters.
+
+Next, we will join the Gi values to their corresponding hunan sf data frame by using the code chunk below.
+
+```{r}
+hunan.gi <- cbind(hunan, as.matrix(gi.fixed)) %>%
+  rename(gstat_fixed = as.matrix.gi.fixed.)
+```
+
+In fact, the code chunk above performs three tasks. First, it convert the output vector (i.e. gi.fixed) into r matrix object by using as.matrix(). Next, cbind() is used to join hunan\@data and gi.fixed matrix to produce a new SpatialPolygonDataFrame called hunan.gi. Lastly, the field name of the gi values is renamed to gstat_fixed by using rename().
+
+### Mapping Gi values with fixed distance weights
+
+The code chunk below shows the functions used to map the Gi values derived using fixed distance weight matrix.
+
+```{r}
+gdppc <- qtm(hunan, "GDPPC")
+
+Gimap <-tm_shape(hunan.gi) +
+  tm_fill(col = "gstat_fixed", 
+          style = "pretty",
+          palette="-RdBu",
+          title = "local Gi") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(gdppc, Gimap, asp=1, ncol=2)
+```
+
+Based on the map plot, we can observe that the hotspots (higher GDDPC) are located within the northern eastern region and the coldspot (lower GDDPC) is located at the southern western and northern western region. The area consist of mostly cold spots than hot spots which might signify a generally uneven distribution of wealth within the Hunan province.
+
+### Gi statistics using adaptive distance
+
+The code chunk below are used to compute the Gi values for GDPPC2012 by using an adaptive distance weight matrix (i.e knb_lw).
+
+```{r}
+fips <- order(hunan$County)
+gi.adaptive <- localG(hunan$GDPPC, knn_lw)
+hunan.gi <- cbind(hunan, as.matrix(gi.adaptive)) %>%
+  rename(gstat_adaptive = as.matrix.gi.adaptive.)
+```
+
+### Mapping Gi values with adaptive distance weights
+
+It is time for us to visualise the locations of hot spot and cold spot areas. The choropleth mapping functions of tmap package will be used to map the Gi values.
+
+The code chunk below shows the functions used to map the Gi values derived using fixed distance weight matrix.
+
+```{r}
+Gimap <- tm_shape(hunan.gi) + 
+  tm_fill(col = "gstat_adaptive", 
+          style = "pretty", 
+          palette="-RdBu", 
+          title = "local Gi") + 
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(gdppc, 
+             Gimap, 
+             asp=1, 
+             ncol=2)
+```
+
+The map plot differ slightly from the fixed weight GI statistic where we see a more concentrated hotspot at the north east region and only one concentrated cold spot at the south west region. The eastern region are mostly region with higher GDDPC compared to the western region (more hotspot in the East and more cold spot in the West.)
+
+## Conclusion
+
+Geospatial autocorrelation is important for us to draw statistical conclusion on whether areas are correlated with one another based on various attributes and of course, the connectivity of the land with others.

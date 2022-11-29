@@ -611,4 +611,3 @@ addLegend(pal = pal, values = ~youngpct, opacity = 0.7, title = NULL,
 ```
 
 ## Conclusion
-
