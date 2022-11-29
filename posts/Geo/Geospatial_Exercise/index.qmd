@@ -20,11 +20,19 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE)
 ```
 
+## Overview
+
+### Introduction
+
+The government of Nigeria deemed the Water, Sanitation, and Hygiene (WASH) sector to be in a state of emergency in 2018. In 2019, 60 million Nigerians were without access to basic drinking water due to a combination of bad infrastructure, a lack of necessary human resources, low investment, and a weak enabling regulatory environment, among other issues. 167 million people lacked access to even the most basic handwashing facilities, and 80 million lacked access to better sanitation facilities.
+
+Only half of rural families have access to improved sanitation, and 39% of households in these areas conduct open defecation, a percentage that has barely changed since 1990.
+
+### Problem Statement
+
+Geospatial analytics hold tremendous potential to address complex problems facing society. In this study, I will be applying appropriate global and local measures of spatial Association techniques to **reveals the spatial patterns of Not Functional water points**.
+
 ## Introduction
-
-The Spatial Autocorrelation measures spatial autocorrelation based on feature locations and feature values simultaneously. Given a set of features and an associated attribute, it evaluates whether the expressed pattern is clustered, scattered, or random. The tool calculates the Moran's I index value as well as a z-score and p-value to assess the significance of this index. P-values are numerical approximations of the area under the curve for a known distribution, bounded by the test statistic.
-
-In this study we will explore the computation of Global and Local Measure of Spatial Autocorrelation (GLSA) by using **spdep** package.
 
 ## Libraries
 
@@ -34,10 +42,9 @@ For this study, we will use the following packages from CRAN.
 -   [`tidyverse`](https://www.tidyverse.org/packages/) - Loading the core tidyverse packages which will be used for data wrangling and visualisation.
 -   [`tmap`](https://cran.r-project.org/web/packages/tmap/index.html) - Thematic maps are geographical maps in which spatial data distributions are visualized. This package offers a flexible, layer-based, and easy to use approach to create thematic maps, such as choropleths and bubble maps.
 -   [`spdep`](https://cran.r-project.org/web/packages/spdep/index.html) - A collection of functions to create spatial weights matrix objects from polygon 'contiguities', from point patterns by distance and tessellations, for summarizing these objects, and for permitting their use in spatial data analysis, including regional aggregation by minimum spanning tree; a collection of tests for spatial 'autocorrelation'
--   [`funModeling`](https://github.com/pablo14/funModeling) - This package contains a set of functions related to exploratory data analysis, data preparation, and model performance. It is used by people coming from business, research, and teaching (professors and students).
 
 ```{r}
-pacman::p_load(sf, spdep, tmap, tidyverse,funModeling)
+pacman::p_load(sf, spdep, tmap, tidyverse)
 ```
 
 ## Data Preparation
@@ -49,24 +56,753 @@ Two dataset will be used for this study:
 
 ### Importing of data
 
-We will use the *st_read* to import the shape file and *read_csv* to import the aspatial data into the R environment. We will then use a relational join *cbind* to combine the spatial and aspatial data together.
+We will use the *st_read* to import the shape file and *read_csv* to import the aspatial data into the R environment.
 
-```{r}
+```{r, echo = FALSE}
 nigeria <- st_read(dsn = "data", 
                  layer = "geoBoundaries-NGA-ADM2")
 
-#nigeria_attribute <- read_csv("data/nigeriaattribute.csv")
 nigeria <- nigeria %>%
   st_transform(crs = 26391)
 
-
 ```
 
-```{r, eval = FALSE, echo= FALSE}
-#nigeriapop <- read_csv("data/nigeriapop.csv")
+```{r, eval = FALSE}
+nigeria <- st_read(dsn = "data", 
+                 layer = "geoBoundaries-NGA-ADM2")
+
+nigeria_attribute <- read_csv("data/nigeriaattribute.csv")
+nigeria <- nigeria %>%
+  st_transform(crs = 26391)
+
 ```
 
 ### Data Wrangling
+
+The practice of correcting or deleting inaccurate, damaged, improperly formatted, duplicate, or incomplete data from a dataset is known as **data wrangling**. There are numerous ways for data to be duplicated or incorrectly categorized when merging multiple data sources. We willl now proceed to ensure our data is cleaned before conducting our analysis.
+
+#### Checking of duplicated area name
+
+Firstly, we will order our dataframe by alphabetical order based on the shapeName. We will then use the `duplicated` function to retrieve all the shapeName that has duplicates and store it in a list. From the result below, we identified **12** shapeNames that are duplicates.
+
+```{r}
+nigeria <- (nigeria[order(nigeria$shapeName), ])
+
+duplicate_area <- nigeria$shapeName[ nigeria$shapeName %in% nigeria$shapeName[duplicated(nigeria$shapeName)] ]
+
+duplicate_area
+
+```
+
+Next, we will leverage on the interactive viewer of `tmap` to check the location of each area. Through the use of Google, we are able to retrieve the actual name and state of the areas. The table below shows the index and the actual name of the area.
+
+| Index | Actual Area Name |
+|-------|------------------|
+| 94    | Bassa (Kogi)     |
+| 95    | Bassa (Plateau)  |
+| 304   | Ifelodun (Kwara) |
+| 305   | Ifelodun (Osun)  |
+| 355   | Irepodun (Kwara) |
+| 356   | Irepodun (Osun)  |
+| 518   | Nassarawa        |
+| 546   | Obi (Benue)      |
+| 547   | Obi(Nasarawa)    |
+| 693   | Surulere (lagos) |
+| 694   | Surulere (Oyo)   |
+
+```{r}
+tmap_mode("view")
+
+tm_shape(nigeria[nigeria$shapeName %in% duplicate_area,]) +
+  tm_polygons()
+```
+
+We will now access the individual index of the `nigeria` data frame and change the value. Lastly, we use the `length()` function to ensure there is no more duplicated shapeName.
+
+```{r}
+nigeria$shapeName[c(94,95,304,305,355,356,519,546,547,693,694)] <- c("Bassa (Kogi)","Bassa (Plateau)",
+                                                                               "Ifelodun (Kwara)","Ifelodun (Osun)",
+                                                                               "Irepodun (Kwara)","Irepodun (Osun)",
+                                                                               "Nassarawa","Obi (Benue)","Obi(Nasarawa)",
+                                                                               "Surulere (Lagos)","Surulere (Oyo)")
+
+length((nigeria$shapeName[ nigeria$shapeName %in% nigeria$shapeName[duplicated(nigeria$shapeName)] ]))
+
+
+```
+
+#### Projection of sf dataframe
+
+Since our aspatial data was imported to a tibble dataframe, we will need to convert it to an `sf` object. First, we rename the columns for ease of representation using the `rename()` function from `dyplr`. We then only retain the columns required for analysis such as the name of the *area name*, *latitude*, *longitude* and *status*. We realised there were NA values within the status column, we will replace the NA values with `Unknown` using the `mutate()` function.
+
+We will then use the [`st_as_sf()`](https://www.rdocumentation.org/packages/sf/versions/1.0-9/topics/st_as_sf) function to convert the dataframe to an `sf` object. We will have to input the column that specify the longitude and latitude, and lastly, the CRS projection of the coordinates.
+
+```{r, eval = FALSE}
+nigeriaT <- nigeria_attribute  %>%
+  rename ("Country" = "#clean_country_name",
+          "clean_adm2" = "#clean_adm2",
+          "status" = "#status_clean",
+          "lat" = "#lat_deg",
+          "long" = "#lon_deg") %>%
+  select (clean_adm2,status,lat,long) %>%
+  mutate(status = replace_na(status, "Unknown"))
+
+nigeriaT_sf <- st_as_sf(nigeriaT, coords = c("long", "lat"),  crs = 4326)
+```
+
+We will now transform the coordinates from 4326 to 26391 projection using the `st_transform()` function. 
+
+```{r, eval = FALSE}
+nigeriaT_sf <- st_transform(nigeriaT_sf, crs = 26391)
+
+st_crs (nigeria)
+st_crs (nigeriaT_sf)
+```
+
+### Visualising of distribution using ggplot
+
+We will use the `ggplot` function to visualise the distribution of the different status. To sort the distribution by descending order `fct_infreq` will be use. 
+
+```{r, eval = FALSE}
+ggplot(data= nigeriaT_sf, 
+       aes(x= fct_infreq(status))) +
+  geom_bar(aes(fill = status), show.legend = FALSE) +
+  geom_text(stat = 'count',
+           aes(label= paste0(stat(count), ', ', 
+                             round(stat(count)/sum(stat(count))*100, 
+                             2), '%')), vjust= -0.5, size= 2.5) +
+  labs(y= 'No. of\nOccurence', x= 'Status',
+       title = "Distribution of Water Tap Status") +
+  theme(axis.title.y= element_text(angle=0), axis.ticks.x= element_blank(),
+        panel.background= element_blank(), axis.line= element_line(color= 'grey'),
+        axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+```{r, echo = FALSE, fig.align='center', fig.cap="ggplot of status frequency count"}
+knitr::include_graphics("statusdistribution.png")
+```
+
+```{r, eval = FALSE, echo = FALSE}
+saveRDS(nigeriaT_sf, "nigeriaT_sf.rds")
+```
+
+```{r, echo = FALSE}
+nigeriaT_sf <- readRDS ("data/nigeriaT_sf.rds")
+```
+
+### Extracting Status of Water Point
+
+Since this analysis is on the functionality of the water taps, we have to extract the number of functional and non-functional water taps from the `nigeriaT_sf` dataframe. The `status` column reveal the status of the water tap. We will now see what values are recorded by using the `unique()` function. From the result below, we can identify mainly four categories of statuses; *Functional*, *Non-Functional*, *Abandoned*, *Unknown*.
+
+Note: **For this analysis, abandoned water taps will be analysed under non-functional.**
+
+From the result below, we can identify a pattern to classify the status based on our criteria. By extracting the first word of the sentence before the punctuation, we will be able to extract the word; *Unknown*, *Abandoned*, *Functional* and *Non*. This will assist us in grouping these status.
+
+```{r}
+unique(nigeriaT_sf$status)
+```
+
+To replace the original values, we will use the `gsub()` function. A regular expression \*\*"(\[A-Za-z\]+).\*" **is used to extract all letters and** \\1\*\* is used to back reference the first capturing group. The result below shows the unique values left within the column.
+
+```{r}
+nigeriaT_sf$status <- gsub("([A-Za-z]+).*", "\\1", nigeriaT_sf$status)
+unique(nigeriaT_sf$status)
+```
+
+### Computing Ratio of Functional and Non Functional Water Point
+
+Instead of creating another data frame to store the new values, we will leverage on the filter function by using the single square bracket "\[\]" operator. The coordinates beings with a row position and that will be used for our filtering condition. [*R Dataframe*](http://www.r-tutor.com/r-introduction/data-frame). Since our water taps are `point` data, we will use [`st_intersects()`](https://cran.r-project.org/web/packages/sf/vignettes/sf3.html) to retrieve every geometry point that intersect with the polygon of the Nigeria ADM area, and subsequently use the function `lengths()` to retrieve the number of points that intersects with the polygon.
+
+```{r}
+nigeria$functional <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Functional",]))
+nigeria$nonfunctional <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Non",])) + lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Abandoned",]))
+nigeria$unknown <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Unknown",]))
+nigeria$total <- lengths(st_intersects(nigeria, nigeriaT_sf))
+```
+
+Next, for areas without any water taps, **my assumption** is that these areas do not need water taps for many possible reasons (lack of habitat, urbanised areas, etc), and therefore will be excluded from the analysis. I use the `filter()` function to remove areas without any water taps and `mutate()` function to create *two* new columns that shows the percentage of functional and non-functional water points over the total water point in the area. (Including `unknown` water point status)
+
+```{r}
+nigeria <- nigeria %>%
+  filter (total != 0) %>%
+  mutate (pct_functional = case_when(
+    functional == 0 ~ 0,
+    TRUE ~ (functional/total) * 100
+  )) %>%
+  mutate (pct_nonfunctional = case_when(
+    nonfunctional == 0 ~ 0,
+    TRUE ~ (nonfunctional/total) * 100
+  ))
+```
+
+## Mapping of Functional and Non Functional Water Point
+
+### Jenks Choropleth Map
+
+We will now plot the choropleth map using `tmap` and `jenks` classification.
+
+```{r, eval = FALSE}
+tmap_mode ("plot")
+fun <- tm_shape (nigeria) +
+  tm_fill("pct_functional",
+          style = "jenks",
+          n=6,
+          title = "Functional (%)") +
+  tm_layout(main.title = "Distribution of Functional Water Tap (%) by ADM2",
+            main.title.position = "center",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5)
+
+nfun <- tm_shape (nigeria) +
+  tm_fill("pct_nonfunctional",
+          style = "jenks",
+          n=6,
+          title = "Non-Functional (%)") +
+  tm_layout(main.title = "Distribution of Non Functional Water Tap (%) by ADM2",
+            main.title.position = "center",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange (fun, nfun, ncol = 2, asp = 1)
+```
+
+```{r, echo = FALSE, fig.align='center', fig.cap="tmap of water tap % distribution (Functional & Non-Functional"}
+knitr::include_graphics("tmap01.png")
+```
+
+### Observations from Jenks Choropleth Map
+
+By looking at the two chloropleth map, we can make 2 **inference**: - The northen region have relatively higher percentage of functional water point compared to the southern region. - The southern region also have relatively higher percentage of non-functional water point.
+
+Now, answering the business question, should we focus our resources in repairing the water tap located at the southern region? Are there any more regions that require our attention? We will now proceed to conduct geospatial analysis to justify or rebut the claims made based on the choropleth map.
+
+## LISA Cluster Map
+
+### Introduction
+
+The Spatial Autocorrelation measures spatial autocorrelation based on feature locations and feature values simultaneously. Given a set of features and an associated attribute, it evaluates whether the expressed pattern is clustered, scattered, or random. The tool calculates the Moran's I index value as well as a z-score and p-value to assess the significance of this index. P-values are numerical approximations of the area under the curve for a known distribution, bounded by the test statistic.
+
+In this study we will explore the computation of Global and Local Measure of Spatial Autocorrelation (GLSA) by using **spdep** package.
+
+For this study, we will be using the distance based weight matrix. There are two type of distance-based proximity matrix, they are:
+
+-   Fixed Distance Weight Matrix
+-   Adaptive Distance Weight Matrix
+
+Since the study is regarding the prioritisation of water tap repair and to identify areas which have restriction in water supply access, neighbouring regions that are nearer to the selected region should have greater weights compared to neighbouring regions that are further away. Therefore, with this concept in mind, we will employ the **Inverse distance weighting** to take **distance decay** into consideration.
+
+### Deriving distance-based and adaptive weight matrix
+
+The first step is to retrieve the centroid for each area. To retrieve the centroid of each area, we will use the `st_centroid()` function. The `st_centroid()` function will calculates the geometric center of a spatial object.
+
+```{r}
+coords <- st_centroid(st_geometry(nigeria))
+coords[1]
+```
+
+### Determine the cut-off distance for fixed distance weight matrix
+
+Secondly, we need to determine the upper limit for distance band by using the steps below:
+
+-   Return a matrix with the indices of points belonging to the set of the k nearest neighbours of each other by using [*knearneigh()*](https://r-spatial.github.io/spdep/reference/knearneigh.html) of **spdep**.
+
+-   Convert the knn object returned by *knearneigh()* into a neighbours list of class nb with a list of integer vectors containing neighbour region number ids by using [*knn2nb()*](https://r-spatial.github.io/spdep/reference/knn2nb.html).
+
+-   Return the length of neighbour relationship edges by using [*nbdists()*](https://r-spatial.github.io/spdep/reference/nbdists.html) of **spdep**. The function returns in the units of the coordinates if the coordinates are projected, in km otherwise.
+
+-   Remove the list structure of the returned object by using [**unlist()**](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/unlist).
+
+```{r}
+k1 <- knn2nb(knearneigh(coords))
+k1dists <- unlist(nbdists(k1, coords))
+summary(k1dists)
+threshold <- max(unlist(nbdists(k1, coords)))
+```
+
+The summary report shows that the largest first nearest neighbour distance is 72.139 km, so using this as the upper threshold gives certainty that all units will have at least one neighbour. We then save the max value as the threshold for the subsequent function.
+
+### Computing Fixed distance weight matrix
+
+Now, we will compute the distance weight matrix by using [*dnearneigh()*](https://www.rdocumentation.org/packages/spdep/versions/1.2-7/topics/dnearneigh) as shown in the code chunk below. The function identifies neighbours of region points by Euclidean distance in the metric of the points between lower (greater than or equal to and upper (less than or equal to) bounds.
+
+```{r}
+wm_d73 <- dnearneigh(coords, 0, threshold)
+wm_d73
+```
+
+From the result above, we can identify an average of 23 neighbours per region using the distance based weight matrix.
+
+### Computing Inverse Adaptive distance weight matrix
+
+Next, we will compute the inverse adaptive distance weight matrix. The [`knearneigh()`](https://r-spatial.github.io/spdep/reference/knearneigh.html) function uses spartial indexing to identify the nearest neighbour. For this analysis, we will set to number of neighbours to **8**.
+
+```{r}
+k8 <- knn2nb(knearneigh(coords, k = 8))
+k8
+```
+
+### Computing Inverse Distance Weights
+
+To compute the inverse distance, we need a function that applies $\frac{1}{x}$ to the entire distance data structure. We use `lapply` to achieve this. The required parameters are the distance and the function specified by `lapply.` Use the functional operator and $\frac{1}{x}$ to get the corresponding function. The important thing to note is that the distance units in the dataset are meters. This means that the distance values between points can be very large, resulting in small reciprocals. To fix this scale dependency, rescale the distances by doing a $\frac{x}{1000}$in the function before computing the reciprocal.
+
+#### Computing Inverse Distance Weights for Fixed Distance
+
+```{r}
+distances <- nbdists(wm_d73,coords)
+distances[1]
+distances <- lapply(distances, function(x) (1/(x/1000)))
+distances[1]
+```
+
+#### Computing Inverse Distance Weights for Adaptive Distance
+
+```{r}
+k.distances <- nbdists(k8, coords)
+k.distances[1]
+invdistance <- lapply(k.distances, function(x) (1/(x/1000)))
+invdistance[1]
+```
+
+### Visualising Weight Matrices
+
+Using the base R `plot` function, we will now plot to visualise the areas with their respective neighbours after assignment based on the various methods. The left graph with the red lines show the adaptive distance with 8 neighbours and the right graph with the black lines show the links of neighbours within the cut-off distance of the above threshold.
+
+```{r}
+par(mfrow=c(1,2))
+plot(nigeria$geometry, border="lightgrey", main="Adaptive Distance (8)")
+plot(k8, coords, add=TRUE, col="red", length=0.08)
+plot(nigeria$geometry, border="lightgrey", main="Fixed Distance")
+plot(wm_d73, coords, add=TRUE, pch = 19, cex = 0.6)
+```
+
+### Constructing Distance Binary Weight Matrix
+
+Now we will have to construct the distance weight matrix using the neighbours and inverse distance that were computed above. Since we have the inverse distance as a variable, we will use the `Binary Weight Matrix` and input the inverse distance as the weight. The `nb2listw()` function takes in a list input `glist` to identify the weight for each neighbour.
+
+The code chunk below will construct the fixed distance weight matrix and subsequently implement the binary weight matrix using the `nb2listw()` function.
+
+```{r}
+rswm_dw <- nb2listw(wm_d73,
+                    glist = distances,
+                   style="B", 
+                   zero.policy = TRUE)
+summary (rswm_dw)
+```
+
+The code chunk below will construct the adaptive distance weight matrix and subsequently implement the Binary weight matrix using the `nb2listw()` function.
+
+```{r}
+bwm_apd <- nb2listw(k8,
+                    glist = invdistance,
+                    style = "B",
+                    zero.policy = TRUE)
+summary (bwm_apd)
+```
+
+### Global Spatial Autocorrelation: Moran's I
+
+To identify whether the area analysed is clustered, dispersed or random, we will have to perform the spatial autocorrelation Moran's I test.
+
+#### Computing Global Moran's I
+
+We will now perform Moran's I statistics testing by using the [*moran.test()*](https://r-spatial.github.io/spdep/reference/moran.test.html) from **spdep** on both functional and non functional water point percentage. The global Moran's I test will also be performed on both the fixed distance and adaptive distance weight matrices.
+
+```{r}
+moran.test(nigeria$pct_nonfunctional, 
+           listw=rswm_dw, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+```{r}
+moran.test(nigeria$pct_functional, 
+           listw=rswm_dw, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+```{r}
+moran.test(nigeria$pct_nonfunctional, 
+           listw=bwm_apd, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+```{r}
+moran.test(nigeria$pct_functional, 
+           listw=bwm_apd, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+#### Interpretation of results
+
+Based on all the results above, the p value is below the alpha value of 0.05, therefore we have enough statistical evidence to **reject** the null hypothesis that the attribute is randomly distributed and a positive Moran I value indicate more spatially clustered than would be expected if underlying spatial processes were random.
+
+#### Computing Monte Carlo Moran's I
+
+The code chunk below performs permutation test for Moran's I statistic by using [`moran.mc()`](https://r-spatial.github.io/spdep/reference/moran.mc.html) of spdep. A total of 1000 simulation will be performed.
+
+```{r}
+set.seed(1234)
+fd_MC = moran.mc(nigeria$pct_nonfunctional, 
+                listw=rswm_dw, 
+                nsim=999, 
+                zero.policy = TRUE,
+                na.action=na.omit)
+fd_MC
+```
+
+```{r}
+set.seed(1234)
+fd_MC_fun = moran.mc(nigeria$pct_functional, 
+                listw=rswm_dw, 
+                nsim=999, 
+                zero.policy = TRUE,
+                na.action=na.omit)
+fd_MC_fun
+```
+
+```{r}
+set.seed(1234)
+adp_MC= moran.mc(nigeria$pct_nonfunctional, 
+                listw=bwm_apd, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+adp_MC
+```
+
+```{r}
+set.seed(1234)
+adp_MC_fun = moran.mc(nigeria$pct_functional, 
+                listw=bwm_apd, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+adp_MC_fun
+```
+
+#### Visualising Monte Carlo Moran's I
+
+We will use a density plot to visualise the output of the Monte Carlo Moran's I. First, we need to extract the `res` value and convert it into a dataframe. We then visualise the test statistic result using `geom_density()` from the ggplot package. `geom_vline` is use to represent the actual Moran I value.
+
+```{r}
+fd_monte_carlo <- as.data.frame(fd_MC[7])
+
+ggplot(fd_monte_carlo, aes(x=res)) + 
+  geom_density(fill="lightblue") +
+  geom_vline(aes(xintercept=0.42102),
+            color="blue", linetype="dashed", size=1) +
+  labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
+  theme_minimal()
+```
+
+```{r}
+fd_monte_carlo_fun <- as.data.frame(fd_MC_fun[7])
+
+ggplot(fd_monte_carlo_fun, aes(x=res)) + 
+  geom_density(fill="lightblue") +
+  geom_vline(aes(xintercept=0.56444),
+            color="blue", linetype="dashed", size=1) +
+  labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
+  theme_minimal() 
+```
+
+```{r}
+adp_monte_carlo <- as.data.frame(adp_MC[7])
+
+ggplot(adp_monte_carlo, aes(x=res)) + 
+  geom_density(fill="lightblue") +
+  geom_vline(aes(xintercept=0.5116),
+            color="blue", linetype="dashed", size=1) +
+  labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
+  theme_minimal() 
+```
+
+```{r}
+adp_monte_carlo_fun <- as.data.frame(adp_MC_fun[7])
+
+ggplot(adp_monte_carlo_fun, aes(x=res)) + 
+  geom_density(fill="lightblue") +
+  geom_vline(aes(xintercept=0.5638),
+            color="blue", linetype="dashed", size=1) +
+  labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
+  theme_minimal() 
+```
+
+## Cluster and Outlier Analysis
+
+### Computing local Moran's I
+
+To compute local Moran's I, the [*localmoran()*](https://r-spatial.github.io/spdep/reference/localmoran.html) function of **spdep** will be used. It computes *Ii* values, given a set of *zi* values and a listw object providing neighbour weighting information for the polygon associated with the zi values.
+
+```{r}
+fips <- order(nigeria$shapeName)
+localMI_dw <- localmoran(nigeria$nonfunctional, rswm_dw)
+localMI_dw_fun <- localmoran(nigeria$functional, rswm_dw)
+localMI_adp <- localmoran(nigeria$nonfunctional, bwm_apd)
+localMI_adp_fun <- localmoran(nigeria$functional, bwm_apd)
+
+
+head(localMI_dw,3)
+head(localMI_dw_fun,3)
+head(localMI_adp,3)
+head(localMI_adp_fun,3)
+```
+
+### Mapping the local Moran's I
+
+We have to combine the local Moran's dataframe with the our exisiting `Nigeria` spatialdataframe before plotting. We will use the `cbind()` function.
+
+```{r}
+nigeria_localMI_dw <- cbind(nigeria,localMI_dw) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+
+nigeria_localMI_dw <- cbind(nigeria_localMI_dw,localMI_dw_fun) %>%
+  rename(Pr.Ii.fun = Pr.z....E.Ii..)
+
+nigeria_localMI_adp <- cbind(nigeria,localMI_adp) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+
+nigeria_localMI_adp <- cbind(nigeria_localMI_adp,localMI_adp_fun) %>%
+  rename(Pr.Ii.fun = Pr.z....E.Ii..)
+```
+
+### Mapping local Moran's I values
+
+To better understand which area are outliers/clusters, we will visualise the Moran I values of each area using `tmap`. Firstly, we will filter all the areas that are not statistically significant (p value \>= 0.05). We will then plot the base nigeria map and overlay with the filtered map.
+
+Using choropleth mapping functions of tmap package, we can plot the local Moran's I values by using the code chunk below.
+
+```{r, eval = FALSE}
+fd_moran <- tm_shape(nigeria_localMI_dw) +
+  tm_fill("white") +
+  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
+  tm_shape(nigeria_localMI_dw[nigeria_localMI_dw$Pr.Ii <= 0.05,]) +
+  tm_fill (col = "Ii",
+           style = "pretty",
+           palette = "RdBu",
+           title = "Local Moran I value") +
+  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
+  tm_layout(main.title = "Local Moran I value for p < 0.05 (Non Functional)",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            title = "Fixed Distance Weight",
+            title.size = 0.6)
+
+fd_moran_fun <- tm_shape(nigeria_localMI_dw) +
+  tm_fill("white") +
+  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
+  tm_shape(nigeria_localMI_dw[nigeria_localMI_dw$Pr.Ii.fun <= 0.05,]) +
+  tm_fill (col = "Ii.1",
+           style = "pretty",
+           palette = "RdBu",
+           title = "Local Moran I value") +
+  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
+  tm_layout(main.title = "Local Moran I value for p < 0.05 (Functional)",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            title = "Fixed Distance Weight",
+            title.size = 0.6)
+
+tmap_arrange (fd_moran, fd_moran_fun, asp = 1, ncol = 2)
+```
+
+```{r, echo = FALSE, fig.align='center', fig.cap="tmap of Fixed Distance Moran I (Functional & Non-Functional)"}
+knitr::include_graphics("tmap02.png")
+```
+
+```{r, eval = FALSE}
+adp_moran <- tm_shape(nigeria_localMI_adp) +
+  tm_fill("white") +
+  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
+  tm_shape(nigeria_localMI_adp[nigeria_localMI_adp$Pr.Ii <= 0.05,]) +
+  tm_fill (col = "Ii",
+           style = "pretty",
+           palette = "RdBu",
+           title = "Local Moran I value") +
+  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
+  tm_layout(main.title = "Local Moran I value for p < 0.05 (Non Functional)",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            title = "Adaptive Distance Weight",
+            title.size = 0.6)
+
+adp_moran_fun <- tm_shape(nigeria_localMI_adp) +
+  tm_fill("white") +
+  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
+  tm_shape(nigeria_localMI_adp[nigeria_localMI_adp$Pr.Ii.fun <= 0.05,]) +
+  tm_fill (col = "Ii.1",
+           style = "pretty",
+           palette = "RdBu",
+           title = "Local Moran I value") +
+  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
+  tm_layout(main.title = "Local Moran I value for p < 0.05 (Functional)",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            title = "Adaptive Distance Weight",
+            title.size = 0.6)
+
+tmap_arrange (adp_moran, adp_moran_fun, asp = 1, ncol = 2)
+```
+
+```{r, echo = FALSE, fig.align='center', fig.cap="tmap of Adaptive Distance Moran I (Functional & Non-Functional)"}
+knitr::include_graphics("tmap03.png")
+```
+
+## Creating a LISA Cluster Map
+
+The LISA Cluster Map shows the significant locations color coded by type of spatial autocorrelation. The first step before we can generate the LISA cluster map is to plot the Moran scatterplot.
+
+### Preparing LISA map classes
+
+We will now prepare the LISA map classes. We first need to retrieve the quadrant for each area.
+
+```{r}
+quadrant <- vector(mode="numeric",length=nrow(localMI_dw))
+```
+
+Next, we scale the GDPPC.
+
+```{r}
+DV <- scale(nigeria_localMI_dw$pct_nonfunctional)
+DV_Fun <- scale(nigeria_localMI_dw$pct_functional)   
+
+```
+
+This is follow by finding the lag of the scaled percentage of functional and non-functional water point.
+
+```{r}
+C_mI <- lag.listw(rswm_dw, DV)
+C_mI_Fun <- lag.listw(rswm_dw, DV_Fun)
+C_mI_adp <- lag.listw(bwm_apd, DV)
+C_mI_adp_Fun <- lag.listw(bwm_apd, DV_Fun)
+```
+
+Using the Moran Scatterplot below, we filter all the area with p value \< 0.05 and identify significant areas.
+
+```{r}
+MIplot <- data.frame(cbind(DV,C_mI,localMI_dw[,5]))
+MIplot <- MIplot %>%
+  filter (X3 < 0.05)
+plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Fixed Distance", xlab = "scaled Non-Functional (%)", ylab = "Lag scaled Non-Functional (%)")
+abline(h = 0, v = 0)
+```
+
+```{r}
+MIplot <- data.frame(cbind(DV_Fun,C_mI,localMI_dw[,5]))
+MIplot <- MIplot %>%
+  filter (X3 < 0.05)
+plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Fixed Distance", xlab = "scaled Functional (%)", ylab = "Lag scaled Functional (%)")
+abline(h = 0, v = 0)
+```
+
+```{r}
+MIplot <- data.frame(cbind(DV,C_mI_adp,localMI_adp[,5]))
+MIplot <- MIplot %>%
+  filter (X3 < 0.05)
+plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Adaptive Weight", xlab = "scaled Non-Functional (%)", ylab = "Lag scaled Non-Functional (%)")
+abline(h = 0, v = 0)
+```
+
+```{r}
+MIplot <- data.frame(cbind(DV_Fun,C_mI_adp_Fun,localMI_adp_fun[,5]))
+MIplot <- MIplot %>%
+  filter (X3 < 0.05)
+plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Adaptive Weight", xlab = "scaled Functional (%)", ylab = "Lag scaled Functional (%)")
+abline(h = 0, v = 0)
+```
+
+We will now then define the quadrant based on the following criteria and place non-significant Moran (p value \< 0.05) in the category 0.:
+
+```{r}
+signif <- 0.05 
+quadrant[DV >0 & C_mI>0] <- 4      
+quadrant[DV <0 & C_mI<0] <- 1      
+quadrant[DV <0 & C_mI>0] <- 2
+quadrant[DV >0 & C_mI<0] <- 3
+quadrant[localMI_dw[,5]>signif] <- 0
+nigeria_localMI_dw$quadrant <- quadrant
+
+quadrant[DV_Fun >0 & C_mI>0] <- 4      
+quadrant[DV_Fun <0 & C_mI<0] <- 1      
+quadrant[DV_Fun <0 & C_mI>0] <- 2
+quadrant[DV_Fun >0 & C_mI<0] <- 3
+quadrant[localMI_dw[,5]>signif] <- 0
+nigeria_localMI_dw$quadrantfun <- quadrant
+
+quadrant[DV >0 & C_mI_adp>0] <- 4      
+quadrant[DV <0 & C_mI_adp<0] <- 1      
+quadrant[DV <0 & C_mI_adp>0] <- 2
+quadrant[DV >0 & C_mI_adp<0] <- 3
+quadrant[localMI_adp[,5]>signif] <- 0
+nigeria_localMI_adp$quadrant <- quadrant
+
+quadrant[DV_Fun >0 & C_mI_adp_Fun>0] <- 4      
+quadrant[DV_Fun <0 & C_mI_adp_Fun<0] <- 1      
+quadrant[DV_Fun <0 & C_mI_adp_Fun>0] <- 2
+quadrant[DV_Fun >0 & C_mI_adp_Fun<0] <- 3
+quadrant[localMI_adp[,5]>signif] <- 0
+nigeria_localMI_adp$quadrantfun <- quadrant
+```
+
+### Plotting LISA map
+
+Once the quadrant of each area has been decided, we will now plot the LISA map using `tmap`. We will plot both the base map with the GDDPC distribution and the LISA map to better understand the relationship.
+
+```{r}
+tmap_mode("plot")
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+lisamap <- tm_shape(nigeria_localMI_dw) +
+  tm_fill(col = "quadrant", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1]) +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5) +
+  tm_layout(main.title = "LISA Map with Quadrant", main.title.size = 0.7,
+            main.title.fontface = "bold", main.title.position = "center")
+```
+
+
+```{r}
+tmap_mode("plot")
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+lisamap <- tm_shape(nigeria_localMI_adp) +
+  tm_fill(col = "quadrant", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1]) +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5) +
+  tm_layout(main.title = "LISA Map (Non Functional) with Quadrant", main.title.size = 0.7,
+            main.title.fontface = "bold", main.title.position = "center")
+
+lisamapfun <- tm_shape(nigeria_localMI_adp) +
+  tm_fill(col = "quadrantfun", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1]) +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5) +
+  tm_layout(main.title = "LISA Map (Functional) with Quadrant", main.title.size = 0.7,
+            main.title.fontface = "bold", main.title.position = "center")
+```
+
+## Future Work
 
 ```{r future use, eval = FALSE, echo= FALSE}
 # Firstly, we will create another column using the `mutate()` and change all *ADM2_NAME* to lowercase using `tolower()`. We will then rename the column *T_TL* to *T_Population* for ease of understanding. Since we only require the total population and the *shapeName* associated to the population, we will use to `select()` function to only retain the respective columns.
@@ -129,567 +865,4 @@ nigeria <- nigeria %>%
     functional == 0 ~ T_Population,
     TRUE ~ T_Population/functional
   ))
-```
-
-### Checking of duplicated area name
-
-```{r}
-nigeria <- (nigeria[order(nigeria$shapeName), ])
-
-duplicate_area <- nigeria$shapeName[ nigeria$shapeName %in% nigeria$shapeName[duplicated(nigeria$shapeName)] ]
-
-nigeria_duplicate <- nigeria %>%
-  filter (shapeName %in% duplicate_area)
-
-```
-
-```{r}
-tmap_mode("view")
-
-tm_shape(nigeria_duplicate) +
-  tm_polygons()
-
-```
-
-```{r}
-nigeria$shapeName[c(94,95,304,305,355,356,519,546,547,693,694)] <- c("Bassa (Kogi)","Bassa (Plateau)",
-                                                                               "Ifelodun (Kwara)","Ifelodun (Osun)",
-                                                                               "Irepodun (Kwara)","Irepodun (Osun)",
-                                                                               "Nassarawa","Obi (Benue)","Obi(Nasarawa)",
-                                                                               "Surulere (Lagos)","Surulere (Oyo)")
-
-length((nigeria$shapeName[ nigeria$shapeName %in% nigeria$shapeName[duplicated(nigeria$shapeName)] ]))
-
-
-```
-
-94 Bassa (Kogi) 95 Bassa (Plateau) 304 Ifelodun (Kwara) 305 Ifelodun (Osun) 355 Irepodun (Kwara) 356 Irepodun (Osun) 518 Nassarawa 546 Obi (Benue) 547 Obi(Nasarawa) 693 Surulere (lagos) 694 Surulere (Oyo)
-
-```{r, eval = FALSE}
-nigeriaT <- nigeria_attribute  %>%
-  rename ("Country" = "#clean_country_name",
-          "clean_adm2" = "#clean_adm2",
-          "status" = "#status_clean",
-          "lat" = "#lat_deg",
-          "long" = "#lon_deg") %>%
-  select (clean_adm2,status,lat,long) %>%
-  mutate(status = replace_na(status, "Unknown"))
-
-nigeriaT_sf <- st_as_sf(nigeriaT, coords = c("long", "lat"),  crs = 4326)
-nigeriaT_sf <- st_transform(nigeriaT_sf, crs = 26391)
-
-st_crs (nigeria)
-st_crs (nigeriaT_sf)
-```
-
-Visualising of distribution using ggplot
-
-```{r, eval = FALSE}
-ggplot(data= nigeriaT_sf, 
-       aes(x= fct_infreq(status))) +
-  geom_bar(aes(fill = status), show.legend = FALSE) +
-  geom_text(stat = 'count',
-           aes(label= paste0(stat(count), ', ', 
-                             round(stat(count)/sum(stat(count))*100, 
-                             2), '%')), vjust= -0.5, size= 2.5) +
-  labs(y= 'No. of\nOccurence', x= 'Status',
-       title = "Distribution of Water Tap Status") +
-  theme(axis.title.y= element_text(angle=0), axis.ticks.x= element_blank(),
-        panel.background= element_blank(), axis.line= element_line(color= 'grey'),
-        axis.text.x = element_text(angle = 90, vjust = 0.5)) 
-```
-
-```{r, echo = FALSE, fig.align='center', fig.cap="ggplot of status frequency count"}
-knitr::include_graphics("WTFreq.png")
-```
-
-```{r, eval = FALSE, echo = FALSE}
-saveRDS(nigeriaT_sf, "nigeriaT_sf.rds")
-```
-
-```{r, echo = FALSE}
-nigeriaT_sf <- readRDS ("data/nigeriaT_sf.rds")
-```
-
-### Retrieving Water Tap Status Ratio
-
-```{r}
-nigeriaT_sf$status <- gsub("([A-Za-z]+).*", "\\1", nigeriaT_sf$status)
-unique(nigeriaT_sf$status)
-```
-
-```{r}
-nigeria$functional <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Functional",]))
-nigeria$nonfunctional <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Non",])) + lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Abandoned",]))
-nigeria$unknown <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Unknown",]))
-nigeria$total <- lengths(st_intersects(nigeria, nigeriaT_sf))
-```
-
-```{r}
-nigeria <- nigeria %>%
-  mutate (pct_functional = case_when(
-    functional == 0 ~ 0,
-    TRUE ~ (functional/total) * 100
-  )) %>%
-  mutate (pct_nonfunctional = case_when(
-    nonfunctional == 0 ~ 0,
-    TRUE ~ (nonfunctional/total) * 100
-  ))
-```
-
-```{r}
-tmap_mode ("plot")
-fun <- tm_shape (nigeria) +
-  tm_fill("pct_functional",
-          style = "jenks",
-          n=6,
-          title = "Functional (%)") +
-  tm_layout(main.title = "Distribution of Functional Water Tap (%) by ADM2",
-            main.title.position = "center",
-            main.title.size = 0.7,
-            main.title.fontface = "bold",
-            legend.height = 0.45, 
-            legend.width = 0.35,
-            frame = TRUE) +
-  tm_borders(alpha = 0.5)
-
-nfun <- tm_shape (nigeria) +
-  tm_fill("pct_nonfunctional",
-          style = "jenks",
-          n=6,
-          title = "Non-Functional (%)") +
-  tm_layout(main.title = "Distribution of Non Functional Water Tap (%) by ADM2",
-            main.title.position = "center",
-            main.title.size = 0.7,
-            main.title.fontface = "bold",
-            legend.height = 0.45, 
-            legend.width = 0.35,
-            frame = TRUE) +
-  tm_borders(alpha = 0.5)
-
-tmap_arrange (fun, nfun, ncol = 2, asp = 1)
-```
-
-```{r, echo = FALSE, fig.align='center', fig.cap="tmap of water tap % distribution (Functional & Non-Functional"}
-knitr::include_graphics("tmap01.png")
-```
-
-## LISA Cluster Map
-
-### Introduction
-
-For this study, we will be using the distance based weight matrix. There are two type of distance-based proximity matrix, they are:
-
--   fixed distance weight matrix
--   adaptive distance weight matrix
-
-We will first explore the fixed distance weight matrix, subsequently the adaptive distance weight matrix and compare the results. 
-
-Since the study is regarding the prioritisation of water tap repair and to identify areas which have restriction in water supply access, neighbouring regions that are nearer to the selected region should have greater weights compared to neighbouring regions that are further away. Therefore, with this concept in mind, we will employ the **Inverse distance weighting**.
-
-### Deriving distance-based and adaptive weight matrix
-
-The first step is to retrieve the centroid for each area. To retrieve the centroid of each area, we will use the `st_centroid()` function. The `st_centroid()` function will calculates the geometric center of a spatial object.
-
-```{r}
-coords <- st_centroid(st_geometry(nigeria))
-```
-
-### Determine the cut-off distance for fixed distance weight matrix
-
-Secondly, we need to determine the upper limit for distance band by using the steps below:
-
--   Return a matrix with the indices of points belonging to the set of the k nearest neighbours of each other by using [*knearneigh()*](https://r-spatial.github.io/spdep/reference/knearneigh.html) of **spdep**.
-
--   Convert the knn object returned by *knearneigh()* into a neighbours list of class nb with a list of integer vectors containing neighbour region number ids by using [*knn2nb()*](https://r-spatial.github.io/spdep/reference/knn2nb.html).
-
--   Return the length of neighbour relationship edges by using [*nbdists()*](https://r-spatial.github.io/spdep/reference/nbdists.html) of **spdep**. The function returns in the units of the coordinates if the coordinates are projected, in km otherwise.
-
--   Remove the list structure of the returned object by using [**unlist()**](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/unlist).
-
-```{r}
-k1 <- knn2nb(knearneigh(coords))
-k1dists <- unlist(nbdists(k1, coords))
-summary(k1dists)
-threshold <- max(unlist(nbdists(k1, coords)))
-```
-
-The summary report shows that the largest first nearest neighbour distance is 72.139 km, so using this as the upper threshold gives certainty that all units will have at least one neighbour. We then save the max value as the threshold for the subsequent function.
-
-### Computing Fixed distance weight matrix
-
-Now, we will compute the distance weight matrix by using [*dnearneigh()*](https://www.rdocumentation.org/packages/spdep/versions/1.2-7/topics/dnearneigh) as shown in the code chunk below. The function identifies neighbours of region points by Euclidean distance in the metric of the points between lower (greater than or equal to and upper (less than or equal to) bounds.
-
-```{r}
-wm_d73 <- dnearneigh(coords, 0, threshold)
-wm_d73
-```
-From the result above, we can identify an average of 23 neighbours per region using the distance based weight matrix.
-
-### Computing Inverse Adaptive distance weight matrix
-
-
-
-```{r}
-k8 <- knn2nb(knearneigh(coords, k = 8))
-k.distances <- nbdists(k8, coords, longlat = TRUE)
-
-k.distances[1]
-```
-
-```{r}
-invdistance <- lapply(k.distances, function(x) (1/(x/1000)))
-invdistance[1]
-```
-
-### Visualising Distance Weight Matrix
-
-The left graph with the red lines show the links of 1st nearest neighbours and the right graph with the black lines show the links of neighbours within the cut-off distance of 73km.
-
-```{r}
-par(mfrow=c(1,2))
-plot(nigeria$geometry, border="lightgrey", main="1st nearest neighbours")
-plot(k1, coords, add=TRUE, col="red", length=0.08)
-plot(nigeria$geometry, border="lightgrey", main="Distance link")
-plot(wm_d73, coords, add=TRUE, pch = 19, cex = 0.6)
-```
-
-### Constructing Distance Binary Weight Matrix
-
-The code chunk below will construct the weight matrix and subsequently implement the row-standardised weight matrix using the `nb2listw()` function.
-
-```{r}
-rswm_dw <- nb2listw(wm_d73, 
-                   style="W", 
-                   zero.policy = TRUE)
-summary (rswm_dw)
-```
-
-The code chunk below will construct the weight matrix and subsequently implement the Binary weight matrix using the `nb2listw()` function.
-
-```{r}
-bwm_apd <- nb2listw(k8,
-                    glist = invdistance,
-                    style = "B",
-                    zero.policy = TRUE)
-summary (bwm_apd)
-```
-
-### Global Spatial Autocorrelation: Moran's I
-
-We will now perform Moran's I statistics testing by using the [*moran.test()*](https://r-spatial.github.io/spdep/reference/moran.test.html) from **spdep**.
-
-```{r}
-moran.test(nigeria$pct_nonfunctional, 
-           listw=rswm_dw, 
-           zero.policy = TRUE, 
-           na.action=na.omit)
-```
-
-```{r}
-moran.test(nigeria$pct_nonfunctional, 
-           listw=bwm_apd, 
-           zero.policy = TRUE, 
-           na.action=na.omit)
-```
-
-```{r}
-moran.test(nigeria$pct_functional, 
-           listw=bwm_apd, 
-           zero.policy = TRUE, 
-           na.action=na.omit)
-```
-
-#### Computing Monte Carlo Moran's I
-
-The code chunk below performs permutation test for Moran's I statistic by using [`moran.mc()`](https://r-spatial.github.io/spdep/reference/moran.mc.html) of spdep. A total of 1000 simulation will be performed.
-
-```{r}
-set.seed(1234)
-fd_MC = moran.mc(nigeria$pct_nonfunctional, 
-                listw=rswm_dw, 
-                nsim=999, 
-                zero.policy = TRUE, 
-                na.action=na.omit)
-fd_MC
-```
-
-```{r}
-set.seed(1234)
-adp_MC= moran.mc(nigeria$pct_nonfunctional, 
-                listw=bwm_apd, 
-                nsim=999, 
-                zero.policy = TRUE, 
-                na.action=na.omit)
-adp_MC
-```
-
-```{r}
-set.seed(1234)
-adp_MC_fun = moran.mc(nigeria$pct_functional, 
-                listw=bwm_apd, 
-                nsim=999, 
-                zero.policy = TRUE, 
-                na.action=na.omit)
-adp_MC_fun
-```
-
-#### Visualising Monte Carlo Moran's I
-
-We will use a density plot to visualise the output of the Monte Carlo Moran's I. First, we need to extract the `res` value and convert it into a dataframe. We then visualise the test statistic result using `geom_density` from the ggplot package.
-
-```{r}
-fd_monte_carlo <- as.data.frame(fd_MC[7])
-
-ggplot(fd_monte_carlo, aes(x=res)) + 
-  geom_density(fill="lightblue") +
-  geom_vline(aes(xintercept=0.40154),
-            color="blue", linetype="dashed", size=1) +
-  labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
-  theme_minimal() 
-```
-
-```{r}
-adp_monte_carlo <- as.data.frame(adp_MC[7])
-
-ggplot(fd_monte_carlo, aes(x=res)) + 
-  geom_density(fill="lightblue") +
-  geom_vline(aes(xintercept=0.49907),
-            color="blue", linetype="dashed", size=1) +
-  labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
-  theme_minimal() 
-```
-
-### Computing local Moran's I
-
-To compute local Moran's I, the [*localmoran()*](https://r-spatial.github.io/spdep/reference/localmoran.html) function of **spdep** will be used. It computes *Ii* values, given a set of *zi* values and a listw object providing neighbour weighting information for the polygon associated with the zi values.
-
-```{r}
-fips <- order(nigeria$shapeName)
-localMI_dw <- localmoran(nigeria$nonfunctional, rswm_dw)
-localMI_adp <- localmoran(nigeria$nonfunctional, bwm_apd)
-localMI_adp_fun <- localmoran(nigeria$functional, bwm_apd)
-
-
-head(localMI_dw)
-head(localMI_adp)
-head(localMI_adp_fun)
-```
-
-### Mapping the local Moran's I
-
-We have to combine the local Moran's dataframe with the our exisiting `Nigeria` spatialdataframe before plotting. We will use the `cbind()` function.
-
-```{r}
-nigeria_localMI_dw <- cbind(nigeria,localMI_dw) %>%
-  rename(Pr.Ii = Pr.z....E.Ii..)
-
-nigeria_localMI_adp <- cbind(nigeria,localMI_adp) %>%
-  rename(Pr.Ii = Pr.z....E.Ii..)
-
-nigeria_localMI_adp <- cbind(nigeria_localMI_adp,localMI_adp_fun) %>%
-  rename(Pr.Ii.fun = Pr.z....E.Ii..)
-```
-
-### Mapping local Moran's I values
-
-Using choropleth mapping functions of tmap package, we can plot the local Moran's I values by using the code chinks below.
-
-```{r}
-nigeria_localMI_dw_sub <- nigeria_localMI_dw %>%
-  filter (Pr.Ii <= 0.05)
-
-tm_shape(nigeria_localMI_dw) +
-  tm_fill("white") +
-  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
-  tm_shape(nigeria_localMI_dw_sub) +
-  tm_fill (col = "Ii",
-           style = "pretty",
-           palette = "RdBu",
-           title = "Local Moran I value") +
-  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
-  tm_layout(main.title = "Local Moran I value for p < 0.05",
-            main.title.size = 0.7,
-            main.title.fontface = "bold")
-```
-
-```{r}
-nigeria_localMI_adp_sub <- nigeria_localMI_adp %>%
-  filter (Pr.Ii <= 0.05)
-
-tm_shape(nigeria_localMI_adp) +
-  tm_fill("white") +
-  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
-  tm_shape(nigeria_localMI_adp_sub) +
-  tm_fill (col = "Ii",
-           style = "pretty",
-           palette = "RdBu",
-           title = "Local Moran I value") +
-  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
-  tm_layout(main.title = "Local Moran I value for p < 0.05 (Non Functional)",
-            main.title.size = 0.7,
-            main.title.fontface = "bold")
-```
-
-```{r}
-nigeria_localMI_adp_sub <- nigeria_localMI_adp %>%
-  filter (Pr.Ii.fun <= 0.05)
-
-tm_shape(nigeria_localMI_adp) +
-  tm_fill("white") +
-  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
-  tm_shape(nigeria_localMI_adp_sub) +
-  tm_fill (col = "Ii.1",
-           style = "pretty",
-           palette = "RdBu",
-           title = "Local Moran I value") +
-  tm_borders("grey", lwd = 0.5, alpha = 0.5) +
-  tm_layout(main.title = "Local Moran I value for p < 0.05 (Functional)",
-            main.title.size = 0.7,
-            main.title.fontface = "bold")
-```
-
-## Creating a LISA Cluster Map
-
-The LISA Cluster Map shows the significant locations color coded by type of spatial autocorrelation. The first step before we can generate the LISA cluster map is to plot the Moran scatterplot.
-
-### Plotting Moran scatterplot
-
-The Moran scatterplot is an illustration of the relationship between the values of the chosen attribute at each location and the average value of the same attribute at neighboring locations.
-
-The code chunk below plots the Moran scatterplot of Non Functional Water Point by using [*moran.plot()*](https://r-spatial.github.io/spdep/reference/moran.plot.html) of **spdep**.
-
-```{r}
-nci <- moran.plot(nigeria$nonfunctional, rswm_dw,
-                  labels=as.character(nigeria$shapeName), 
-                  xlab="Non Functional Water Point", 
-                  ylab="Spatially Lag Non Functional Water Point")
-```
-
-### Preparing LISA map classes
-
-We will now prepare the LISA map classes. We first need to retrieve the quadrant for each area.
-
-```{r}
-quadrant <- vector(mode="numeric",length=nrow(localMI_dw))
-```
-
-Next, we scale the GDPPC.
-
-```{r}
-DV <- scale(nigeria_localMI_dw$pct_nonfunctional)
-DV_Fun <- scale(nigeria_localMI_dw$pct_functional)   
-
-```
-
-This is follow by finding the lag of the scaled GDPPC.
-
-```{r}
-C_mI <- lag.listw(rswm_dw, DV)
-C_mI_adp <- lag.listw(bwm_apd, DV)
-C_mI_adp_Fun <- lag.listw(bwm_apd, DV_Fun)
-```
-
-Using the Moran Scatterplot below, we filter all the area with p value \< 0.05 and identify significant areas. We can see that the plot below is align with our Moran I plot where there are a total of 11 significant areas, 2 areas that are outliers (LH), and 9 areas that are clusters (7 HH and 2 LL).
-
-```{r}
-MIplot <- data.frame(cbind(DV,C_mI,localMI_dw[,5]))
-MIplot <- MIplot %>%
-  filter (X3 < 0.05)
-plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Fixed Distance", xlab = "scaled Non-Functional (%)", ylab = "Lag scaled Non-Functional (%)")
-abline(h = 0, v = 0)
-```
-
-```{r}
-MIplot <- data.frame(cbind(DV,C_mI_adp,localMI_adp[,5]))
-MIplot <- MIplot %>%
-  filter (X3 < 0.05)
-plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Adaptive Weight", xlab = "scaled Non-Functional (%)", ylab = "Lag scaled Non-Functional (%)")
-abline(h = 0, v = 0)
-```
-
-```{r}
-MIplot <- data.frame(cbind(DV_Fun,C_mI_adp_Fun,localMI_adp_fun[,5]))
-MIplot <- MIplot %>%
-  filter (X3 < 0.05)
-plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Adaptive Weight", xlab = "scaled Functional (%)", ylab = "Lag scaled Functional (%)")
-abline(h = 0, v = 0)
-```
-
-We will now then define the quadrant based on the following criteria and place non-significant Moran (p value \< 0.05) in the category 0.:
-
-```{r}
-signif <- 0.05 
-quadrant[DV >0 & C_mI>0] <- 4      
-quadrant[DV <0 & C_mI<0] <- 1      
-quadrant[DV <0 & C_mI>0] <- 2
-quadrant[DV >0 & C_mI<0] <- 3
-quadrant[localMI_dw[,5]>signif] <- 0
-nigeria_localMI_dw$quadrant <- quadrant
-
-quadrant[DV >0 & C_mI_adp>0] <- 4      
-quadrant[DV <0 & C_mI_adp<0] <- 1      
-quadrant[DV <0 & C_mI_adp>0] <- 2
-quadrant[DV >0 & C_mI_adp<0] <- 3
-quadrant[localMI_adp[,5]>signif] <- 0
-nigeria_localMI_adp$quadrant <- quadrant
-
-quadrant[DV_Fun >0 & C_mI_adp_Fun>0] <- 4      
-quadrant[DV_Fun <0 & C_mI_adp_Fun<0] <- 1      
-quadrant[DV_Fun <0 & C_mI_adp_Fun>0] <- 2
-quadrant[DV_Fun >0 & C_mI_adp_Fun<0] <- 3
-quadrant[localMI_adp[,5]>signif] <- 0
-nigeria_localMI_adp$quadrantfun <- quadrant
-```
-
-### Plotting LISA map
-
-Once the quadrant of each area has been decided, we will now plot the LISA map using `tmap`. We will plot both the base map with the GDDPC distribution and the LISA map to better understand the relationship.
-
-```{r}
-tmap_mode("plot")
-colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
-clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
-
-lisamap <- tm_shape(nigeria_localMI_dw) +
-  tm_fill(col = "quadrant", 
-          style = "cat", 
-          palette = colors[c(sort(unique(quadrant)))+1], 
-          labels = clusters[c(sort(unique(quadrant)))+1]) +
-  tm_view(set.zoom.limits = c(11,17)) +
-  tm_borders(alpha=0.5) +
-  tm_layout(main.title = "LISA Map with Quadrant", main.title.size = 0.7,
-            main.title.fontface = "bold", main.title.position = "center")
-
-
-tmap_arrange (lisamap,nfun)
-```
-
-```{r}
-tmap_mode("plot")
-colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
-clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
-
-lisamap <- tm_shape(nigeria_localMI_adp) +
-  tm_fill(col = "quadrant", 
-          style = "cat", 
-          palette = colors[c(sort(unique(quadrant)))+1], 
-          labels = clusters[c(sort(unique(quadrant)))+1]) +
-  tm_view(set.zoom.limits = c(11,17)) +
-  tm_borders(alpha=0.5) +
-  tm_layout(main.title = "LISA Map (Non Functional) with Quadrant", main.title.size = 0.7,
-            main.title.fontface = "bold", main.title.position = "center")
-
-lisamapfun <- tm_shape(nigeria_localMI_adp) +
-  tm_fill(col = "quadrantfun", 
-          style = "cat", 
-          palette = colors[c(sort(unique(quadrant)))+1], 
-          labels = clusters[c(sort(unique(quadrant)))+1]) +
-  tm_view(set.zoom.limits = c(11,17)) +
-  tm_borders(alpha=0.5) +
-  tm_layout(main.title = "LISA Map (Functional) with Quadrant", main.title.size = 0.7,
-            main.title.fontface = "bold", main.title.position = "center")
-
-
-tmap_arrange (lisamap,lisamapfun)
 ```

@@ -117,3 +117,11 @@ div.quarto-about-trestles .about-entity .about-link:hover {
   font-size: 1.1rem !important;
   margin-top: -9px;
 }
+
+.figure-caption {
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+  font-size: 10px;
+}
