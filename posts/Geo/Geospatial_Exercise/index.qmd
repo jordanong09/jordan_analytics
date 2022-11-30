@@ -792,7 +792,7 @@ quadrant <- vector(mode="numeric",length=nrow(localMI_dw))
 
 We will now then define the quadrant based on the following criteria and place non-significant Moran (p value \< 0.05) in the category 0:
 
-*Note: We will use the scaled variable and the lag scaled variable used earlier on for the Moran Scatterplot.**
+**Note: We will use the scaled variable and the lag scaled variable used earlier on for the Moran Scatterplot.**
 
 ```{r}
 signif <- 0.05 
@@ -1018,7 +1018,7 @@ The results from the Gi map seems to align to what the LISA map have shown. From
 
 Similarly, the map also shows more **clustered** functional water point and **dispersed** non-functional water point at the northern regions.
 
-The result of both LISA map and Gi map shows consistency in the area of concerns and area of focused. This is align to the recent initiatives by [**ENI**](https://www.eni.com/en-IT/operations/access-water-resources-nigeria.html) that focus on ensuring water access to the North-East region of Nigeria that shows why these regions are not an area of concern.
+The result of both LISA map and Gi map shows consistency in the area of concerns and area of focused. This is align to the recent initiatives by [**ENI**](https://www.eni.com/en-IT/operations/access-water-resources-nigeria.html) that focus on ensuring water access to the North-East region of Nigeria that shows why these regions are not an area of concern. The study by [**Adebayo Oluwole Eludoyin**](https://www.researchgate.net/publication/348850042_Accessibility_to_safe_drinking_water_in_selected_urban_communities_in_southwest_Nigeria) also substantiate our claim on the importance of focusing on the South-West region of Nigeria to improve the water access for it's population.
 
 ## Conclusion
 

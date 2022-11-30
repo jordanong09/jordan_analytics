@@ -125,3 +125,9 @@ div.quarto-about-trestles .about-entity .about-link:hover {
   text-align: center;
   font-size: 10px;
 }
+
+.card-subtitle{
+  color: black;
+  padding: 2px;
+  font-size: 12px;
+}
