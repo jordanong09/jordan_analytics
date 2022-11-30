@@ -116,6 +116,8 @@ tmap_mode("view")
 
 tm_shape(nigeria[nigeria$shapeName %in% duplicate_area,]) +
   tm_polygons()
+
+tmap_mode("plot")
 ```
 
 We will now access the individual index of the `nigeria` data frame and change the value. Lastly, we use the `length()` function to ensure there is no more duplicated shapeName.
@@ -391,11 +393,11 @@ Now we will have to construct the distance weight matrix using the neighbours an
 The code chunk below will construct the fixed distance weight matrix and subsequently implement the binary weight matrix using the `nb2listw()` function.
 
 ```{r}
-rswm_dw <- nb2listw(wm_d73,
+bwm_fd <- nb2listw(wm_d73,
                     glist = distances,
                    style="B", 
                    zero.policy = TRUE)
-summary (rswm_dw)
+summary (bwm_fd)
 ```
 
 The code chunk below will construct the adaptive distance weight matrix and subsequently implement the Binary weight matrix using the `nb2listw()` function.
@@ -418,14 +420,14 @@ We will now perform Moran's I statistics testing by using the [*moran.test()*](h
 
 ```{r}
 moran.test(nigeria$pct_nonfunctional, 
-           listw=rswm_dw, 
+           listw=bwm_fd, 
            zero.policy = TRUE, 
            na.action=na.omit)
 ```
 
 ```{r}
 moran.test(nigeria$pct_functional, 
-           listw=rswm_dw, 
+           listw=bwm_fd, 
            zero.policy = TRUE, 
            na.action=na.omit)
 ```
@@ -455,7 +457,7 @@ The code chunk below performs permutation test for Moran's I statistic by using 
 ```{r}
 set.seed(1234)
 fd_MC = moran.mc(nigeria$pct_nonfunctional, 
-                listw=rswm_dw, 
+                listw=bwm_fd, 
                 nsim=999, 
                 zero.policy = TRUE,
                 na.action=na.omit)
@@ -465,7 +467,7 @@ fd_MC
 ```{r}
 set.seed(1234)
 fd_MC_fun = moran.mc(nigeria$pct_functional, 
-                listw=rswm_dw, 
+                listw=bwm_fd, 
                 nsim=999, 
                 zero.policy = TRUE,
                 na.action=na.omit)
@@ -560,8 +562,8 @@ To compute local Moran's I, the [*localmoran()*](https://r-spatial.github.io/spd
 
 ```{r}
 fips <- order(nigeria$shapeName)
-localMI_dw <- localmoran(nigeria$nonfunctional, rswm_dw)
-localMI_dw_fun <- localmoran(nigeria$functional, rswm_dw)
+localMI_dw <- localmoran(nigeria$nonfunctional, bwm_fd)
+localMI_dw_fun <- localmoran(nigeria$functional, bwm_fd)
 localMI_adp <- localmoran(nigeria$nonfunctional, bwm_apd)
 localMI_adp_fun <- localmoran(nigeria$functional, bwm_apd)
 
@@ -589,6 +591,110 @@ nigeria_localMI_adp <- cbind(nigeria,localMI_adp) %>%
 nigeria_localMI_adp <- cbind(nigeria_localMI_adp,localMI_adp_fun) %>%
   rename(Pr.Ii.fun = Pr.z....E.Ii..)
 ```
+
+### Visualisation of Moran Scatterplot
+
+We will now visualise the moran values using `ggplot`.
+
+Using the Moran Scatterplot below, we filter all the area with p value \< 0.05 and identify significant areas.
+
+We will first have to calculate the scaled attribute and the lagged scaled attribute using the `scale()` function and `lag.listw()` function.
+
+We scale the the percentage for both functional and non functional water points.
+
+```{r}
+DV <- scale(nigeria_localMI_dw$pct_nonfunctional)
+DV_Fun <- scale(nigeria_localMI_dw$pct_functional)   
+```
+
+This is follow by finding the lag of the scaled percentage of functional and non-functional water point.
+
+```{r}
+C_mI <- lag.listw(bwm_fd, DV)
+C_mI_Fun <- lag.listw(bwm_fd, DV_Fun)
+C_mI_adp <- lag.listw(bwm_apd, DV)
+C_mI_adp_Fun <- lag.listw(bwm_apd, DV_Fun)
+```
+
+Once we are done with the computation, we will plot the scatterplot using the variables above.
+
+```{r}
+MIplot <- data.frame(cbind(DV,C_mI,localMI_dw[,5]))
+MIplot <- MIplot %>%
+  filter (X3 < 0.05)
+
+fd_MI_Plot <- ggplot(MIplot, aes(x = X1, y = X2)) +
+  geom_point() +
+  ylim(-2,1) +
+  xlim (-2,3) +
+  geom_hline(yintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  geom_vline(xintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  labs(title = "Moran Scatterplot Fixed Distance (Non-Functional)", x = "scaled Non-Functional (%)", y = "Lag scaled Non-Functional (%)") +
+  theme_classic() +
+  theme(plot.title = element_text(size=8))
+```
+
+```{r}
+MIplot <- data.frame(cbind(DV_Fun,C_mI,localMI_dw[,5]))
+MIplot <- MIplot %>%
+  filter (X3 < 0.05)
+
+fd_MI_Plot_fun <- ggplot(MIplot, aes(x = X1, y = X2)) +
+  geom_point() +
+  ylim(-2,1) +
+  xlim (-2,3) +
+  geom_hline(yintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  geom_vline(xintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  labs(title = "Moran Scatterplot Fixed Distance (Functional)", x = "scaled Functional (%)", y = "Lag scaled Functional (%)") +
+  theme_classic() + 
+  theme(plot.title = element_text(size=8))
+```
+
+```{r}
+MIplot <- data.frame(cbind(DV,C_mI_adp,localMI_adp[,5]))
+MIplot <- MIplot %>%
+  filter (X3 < 0.05)
+
+ad_MI_Plot <- ggplot(MIplot, aes(x = X1, y = X2)) +
+  geom_point() +
+  ylim(-2,1) +
+  xlim (-2,3) +
+  geom_hline(yintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  geom_vline(xintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  labs(title = "Moran Scatterplot Adapative Distance (Non-Functional)", x = "scaled Non-Functional (%)", y = "Lag scaled Non-Functional (%)") +
+  theme_classic() +
+  theme(plot.title = element_text(size=8))
+```
+
+```{r}
+MIplot <- data.frame(cbind(DV_Fun,C_mI_adp_Fun,localMI_adp_fun[,5]))
+MIplot <- MIplot %>%
+  filter (X3 < 0.05)
+
+ad_MI_Plot_fun <- ggplot(MIplot, aes(x = X1, y = X2)) +
+  geom_point() +
+  ylim(-2,1) +
+  xlim (-2,3) +
+  geom_hline(yintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  geom_vline(xintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  labs(title = "Moran Scatterplot Adapative Distance (Functional)", x = "scaled Functional (%)", y = "Lag scaled Functional (%)") +
+  theme_classic() +
+  theme(plot.title = element_text(size=8))
+```
+
+```{r}
+(fd_MI_Plot + fd_MI_Plot_fun)/(ad_MI_Plot + ad_MI_Plot_fun)
+```
+
+Due to the number of areas that are significant, it is hard to draw any statistical conclusion or inference from the scatterplot. Therefore, we will now visual the Moran I results on a chloropleth map instead.
 
 ### Mapping local Moran's I values
 
@@ -684,101 +790,9 @@ We will now prepare the LISA map classes. We first need to retrieve the quadrant
 quadrant <- vector(mode="numeric",length=nrow(localMI_dw))
 ```
 
-Next, we scale the the percentage for both functional and non functional water points.
-
-```{r}
-DV <- scale(nigeria_localMI_dw$pct_nonfunctional)
-DV_Fun <- scale(nigeria_localMI_dw$pct_functional)   
-```
-
-This is follow by finding the lag of the scaled percentage of functional and non-functional water point.
-
-```{r}
-C_mI <- lag.listw(rswm_dw, DV)
-C_mI_Fun <- lag.listw(rswm_dw, DV_Fun)
-C_mI_adp <- lag.listw(bwm_apd, DV)
-C_mI_adp_Fun <- lag.listw(bwm_apd, DV_Fun)
-```
-
-Using the Moran Scatterplot below, we filter all the area with p value \< 0.05 and identify significant areas.
-
-```{r}
-MIplot <- data.frame(cbind(DV,C_mI,localMI_dw[,5]))
-MIplot <- MIplot %>%
-  filter (X3 < 0.05)
-
-fd_MI_Plot <- ggplot(MIplot, aes(x = X1, y = X2)) +
-  geom_point() +
-  ylim(-2,1) +
-  xlim (-2,3) +
-  geom_hline(yintercept=0, linetype="dashed", 
-                color = "red", size=0.5) +
-  geom_vline(xintercept=0, linetype="dashed", 
-                color = "red", size=0.5) +
-  labs(title = "Moran Scatterplot Fixed Distance (Non-Functional)", x = "scaled Non-Functional (%)", y = "Lag scaled Non-Functional (%)") +
-  theme_classic() +
-  theme(plot.title = element_text(size=8))
-```
-
-```{r}
-MIplot <- data.frame(cbind(DV_Fun,C_mI,localMI_dw[,5]))
-MIplot <- MIplot %>%
-  filter (X3 < 0.05)
-
-fd_MI_Plot_fun <- ggplot(MIplot, aes(x = X1, y = X2)) +
-  geom_point() +
-  ylim(-2,1) +
-  xlim (-2,3) +
-  geom_hline(yintercept=0, linetype="dashed", 
-                color = "red", size=0.5) +
-  geom_vline(xintercept=0, linetype="dashed", 
-                color = "red", size=0.5) +
-  labs(title = "Moran Scatterplot Fixed Distance (Functional)", x = "scaled Functional (%)", y = "Lag scaled Functional (%)") +
-  theme_classic() + 
-  theme(plot.title = element_text(size=8))
-```
-
-```{r}
-MIplot <- data.frame(cbind(DV,C_mI_adp,localMI_adp[,5]))
-MIplot <- MIplot %>%
-  filter (X3 < 0.05)
-
-ad_MI_Plot <- ggplot(MIplot, aes(x = X1, y = X2)) +
-  geom_point() +
-  ylim(-2,1) +
-  xlim (-2,3) +
-  geom_hline(yintercept=0, linetype="dashed", 
-                color = "red", size=0.5) +
-  geom_vline(xintercept=0, linetype="dashed", 
-                color = "red", size=0.5) +
-  labs(title = "Moran Scatterplot Adapative Distance (Non-Functional)", x = "scaled Non-Functional (%)", y = "Lag scaled Non-Functional (%)") +
-  theme_classic() +
-  theme(plot.title = element_text(size=8))
-```
-
-```{r}
-MIplot <- data.frame(cbind(DV_Fun,C_mI_adp_Fun,localMI_adp_fun[,5]))
-MIplot <- MIplot %>%
-  filter (X3 < 0.05)
-
-ad_MI_Plot_fun <- ggplot(MIplot, aes(x = X1, y = X2)) +
-  geom_point() +
-  ylim(-2,1) +
-  xlim (-2,3) +
-  geom_hline(yintercept=0, linetype="dashed", 
-                color = "red", size=0.5) +
-  geom_vline(xintercept=0, linetype="dashed", 
-                color = "red", size=0.5) +
-  labs(title = "Moran Scatterplot Adapative Distance (Functional)", x = "scaled Functional (%)", y = "Lag scaled Functional (%)") +
-  theme_classic() +
-  theme(plot.title = element_text(size=8))
-```
-
-```{r}
-(fd_MI_Plot + fd_MI_Plot_fun)/(ad_MI_Plot + ad_MI_Plot_fun)
-```
-
 We will now then define the quadrant based on the following criteria and place non-significant Moran (p value \< 0.05) in the category 0:
+
+*Note: We will use the scaled variable and the lag scaled variable used earlier on for the Moran Scatterplot.**
 
 ```{r}
 signif <- 0.05 
@@ -896,13 +910,129 @@ adaptiveD_Lisa <- tmap_arrange (lisamap_ad,lisamap_ad_fun, ncol = 2, widths = 10
 knitr::include_graphics("tmap05.png")
 ```
 
-### Analysis of result
+### Analysis of LISA map result
 
 For both distance weight methods, we can see that the **South West** region shows a **H-H** for non-functional water point percentage and a few regions shows a **L-L** and **L-H** for functional water point percentage. These regions should be prioritize for repair since they have their regions and neighbouring regions most likely have a lot of non-functional water point and also very little functional water point.
 
 What we can see from the map is also the **North East** region seems to have good access to water point with regions showing **H-H** for functional water point percentage and a **L-L** or **L-H** for non-functional water point percentage.
 
+## Hotspot and Coldspot Analysis
+
+Getis-Ord Gi* (G-I-star), another name for hotspot analysis, operates by examining each feature in the dataset in the context of nearby features in the same dataset. Despite having a high value, a feature can not be a statistically significant hotspot. A feature with a high value must be surrounded by other features with high values in order to constitute a significant hotspot.
+
+### Generating Z score for Gertis-Ord Gi
+
+To generate the Z score for each region, we will use the `localG()` function that takes in the attribute and the neighbour list. Since the output of the `localG()` function is in a list, we will convert it to a data frame by using the `as.matrix()` function. We will do the following steps on both distance weight methods and for both functional and non functional percentage attribute.
+
+```{r, eval = FALSE}
+gi.adaptive <- as.matrix(localG(nigeria$pct_nonfunctional, bwm_apd))
+gi.adaptive_fun <- as.matrix(localG(nigeria$pct_functional, bwm_apd))
+nigeria.gi <- cbind(nigeria, gi.adaptive) %>%
+  rename(gstat_adaptive = gi.adaptive) 
+nigeria.gi <- cbind(nigeria.gi, gi.adaptive_fun) %>%
+  rename(gstat_adaptive_fun = gi.adaptive_fun) 
+
+gi.fixed <- as.matrix(localG(nigeria$pct_nonfunctional, bwm_fd))
+gi.fixed_fun <- as.matrix(localG(nigeria$pct_functional, bwm_fd))
+nigeria.gi <- cbind(nigeria.gi, gi.fixed) %>%
+  rename(gstat_fixed = gi.fixed) 
+nigeria.gi <- cbind(nigeria.gi, gi.fixed_fun) %>%
+  rename(gstat_fixed_fun = gi.fixed_fun) 
+```
+
+### Visualising Z score for Gertis-Ord Gi
+
+Once we have attained the Z score for each area, we will visualise the variable using `tmap`. The code chunk below will generate the map:
+
+```{r, eval = FALSE}
+#Fixed Distance Gi Map
+Gimap_fixed <-tm_shape(nigeria.gi) +
+  tm_fill(col = "gstat_fixed", 
+          style = "pretty",
+          palette="-RdBu",
+          title = "local Gi") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Gi Map (Functional)",
+            main.title.size = 0.6,
+            main.title.fontface = "bold",
+            main.title.position = "center",
+            title = "Fixed Distance Weight",
+            title.size = 0.6)
+
+Gimap_fixed_fun <-tm_shape(nigeria.gi) +
+  tm_fill(col = "gstat_fixed_fun", 
+          style = "pretty",
+          palette="-RdBu",
+          title = "local Gi") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Gi Map (Functional)",
+            main.title.size = 0.6,
+            main.title.fontface = "bold",
+            main.title.position = "center",
+            title = "Fixed Distance Weight",
+            title.size = 0.6)
+
+tmap_arrange(Gimap_fixed,Gimap_fixed_fun)
+
+#Adaptive Distance Gi Map
+Gimap_adaptive <-tm_shape(nigeria.gi) +
+  tm_fill(col = "gstat_adaptive", 
+          style = "pretty",
+          palette="-RdBu",
+          title = "local Gi") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Gi Map (Non-Functional)",
+            main.title.size = 0.6,
+            main.title.fontface = "bold",
+            main.title.position = "center",
+            title = "Adaptive Distance Weight",
+            title.size = 0.6)
+
+Gimap_adaptive_fun <-tm_shape(nigeria.gi) +
+  tm_fill(col = "gstat_adaptive_fun", 
+          style = "pretty",
+          palette="-RdBu",
+          title = "local Gi") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Gi Map (Functional)",
+            main.title.size = 0.6,
+            main.title.fontface = "bold",
+            main.title.position = "center",
+            title = "Adaptive Distance Weight",
+            title.size = 0.6)
+
+tmap_arrange(Gimap_adaptive,Gimap_adaptive_fun)
+```
+
+```{r, echo = FALSE, fig.align='center', fig.cap="Gi map of Fixed Distance (Non-Functional & Functional)"}
+knitr::include_graphics("tmap06.png")
+```
+
+```{r, echo = FALSE, fig.align='center', fig.cap="Gi map of Adaptive Distance (Non-Functional & Functional)"}
+knitr::include_graphics("tmap07.png")
+```
+
+### Analysis of Gi map result
+
+The results from the Gi map seems to align to what the LISA map have shown. From the Gi Map, we can see the southern area having more **clustered** non-functional water point and **dispersed** functional water point. This would likely be the priority of repair if resources are limited.
+
+Similarly, the map also shows more **clustered** functional water point and **dispersed** non-functional water point at the northern regions.
+
+The result of both LISA map and Gi map shows consistency in the area of concerns and area of focused. This is align to the recent initiatives by [**ENI**](https://www.eni.com/en-IT/operations/access-water-resources-nigeria.html) that focus on ensuring water access to the North-East region of Nigeria that shows why these regions are not an area of concern.
+
+## Conclusion
+
+Geospatial Autocorrelation remains an important tool for organization to better allocate limited resources to solve any issues. The use of LISA and Gi map will allow organisation to better understand the geographical relationship based on the attribute analysed and enhance the quality of decision-making. 
+
 ## Future Work
+
+To enhance the quality of research and analysis, I proposed to enhance the result of this analysis by conducting these research:
+
+-   **Population** - Instead of purely looking at the proportion of functional and non-functional water point, population of area can be considered to understand the needs of the region based on it's population size. Tap per population must be considered to provide a better understanding of what the region is lacking and which region should be an area of focus to increase water access.
+
+- **k-nearest neighbour** - Due to the short timeframe I have to conduct this analysis, I proposed to have more samples for different neighbours and compare the results. This will better justify the regions that are indeed an area of concern.
+
+
 
 ```{r future use, eval = FALSE, echo= FALSE}
 # Firstly, we will create another column using the `mutate()` and change all *ADM2_NAME* to lowercase using `tolower()`. We will then rename the column *T_TL* to *T_Population* for ease of understanding. Since we only require the total population and the *shapeName* associated to the population, we will use to `select()` function to only retain the respective columns.
