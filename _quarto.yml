@@ -23,6 +23,10 @@ format:
     toc: true
     date-format: long
     code-link: true
+    code-overflow: wrap
+    code-fold: true
+    code-block-border-left: true
+    code-summary: "Show the code"
 
 editor: visual
 

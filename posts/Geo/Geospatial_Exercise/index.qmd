@@ -41,10 +41,11 @@ For this study, we will use the following packages from CRAN.
 -   [`sf`](https://cloud.r-project.org/web/packages/sf/index.html) - Support for simple features, a standardized way to encode spatial vector data. Binds to 'GDAL' for reading and writing data, to 'GEOS' for geometrical operations, and to 'PROJ' for projection conversions and datum transformations. Uses by default the 's2' package for spherical geometry operations on ellipsoidal (long/lat) coordinates.
 -   [`tidyverse`](https://www.tidyverse.org/packages/) - Loading the core tidyverse packages which will be used for data wrangling and visualisation.
 -   [`tmap`](https://cran.r-project.org/web/packages/tmap/index.html) - Thematic maps are geographical maps in which spatial data distributions are visualized. This package offers a flexible, layer-based, and easy to use approach to create thematic maps, such as choropleths and bubble maps.
--   [`spdep`](https://cran.r-project.org/web/packages/spdep/index.html) - A collection of functions to create spatial weights matrix objects from polygon 'contiguities', from point patterns by distance and tessellations, for summarizing these objects, and for permitting their use in spatial data analysis, including regional aggregation by minimum spanning tree; a collection of tests for spatial 'autocorrelation'
+-   [`spdep`](https://cran.r-project.org/web/packages/spdep/index.html) - A collection of functions to create spatial weights matrix objects from polygon 'contiguities', from point patterns by distance and tessellations, for summarizing these objects, and for permitting their use in spatial data analysis, including regional aggregation by minimum spanning tree; a collection of tests for spatial 'autocorrelation'.
+-   [`patchwork`](https://patchwork.data-imaginist.com/) - Combine separate ggplots into the same graphic.
 
 ```{r}
-pacman::p_load(sf, spdep, tmap, tidyverse)
+pacman::p_load(sf, spdep, tmap, tidyverse,patchwork)
 ```
 
 ## Data Preparation
@@ -150,7 +151,7 @@ nigeriaT <- nigeria_attribute  %>%
 nigeriaT_sf <- st_as_sf(nigeriaT, coords = c("long", "lat"),  crs = 4326)
 ```
 
-We will now transform the coordinates from 4326 to 26391 projection using the `st_transform()` function. 
+We will now transform the coordinates from 4326 to 26391 projection using the `st_transform()` function.
 
 ```{r, eval = FALSE}
 nigeriaT_sf <- st_transform(nigeriaT_sf, crs = 26391)
@@ -161,7 +162,7 @@ st_crs (nigeriaT_sf)
 
 ### Visualising of distribution using ggplot
 
-We will use the `ggplot` function to visualise the distribution of the different status. To sort the distribution by descending order `fct_infreq` will be use. 
+We will use the `ggplot` function to visualise the distribution of the different status. To sort the distribution by descending order `fct_infreq` will be use.
 
 ```{r, eval = FALSE}
 ggplot(data= nigeriaT_sf, 
@@ -202,7 +203,7 @@ From the result below, we can identify a pattern to classify the status based on
 unique(nigeriaT_sf$status)
 ```
 
-To replace the original values, we will use the `gsub()` function. A regular expression \*\*"(\[A-Za-z\]+).\*" **is used to extract all letters and** \\1\*\* is used to back reference the first capturing group. The result below shows the unique values left within the column.
+To replace the original values, we will use the `gsub()` function. A regular expression **"(\[A-Za-z\]+).\*"** is used to extract all letters and **\\\\1** is used to back reference the first capturing group. The result below shows the unique values left within the column.
 
 ```{r}
 nigeriaT_sf$status <- gsub("([A-Za-z]+).*", "\\1", nigeriaT_sf$status)
@@ -495,49 +496,61 @@ adp_MC_fun
 
 We will use a density plot to visualise the output of the Monte Carlo Moran's I. First, we need to extract the `res` value and convert it into a dataframe. We then visualise the test statistic result using `geom_density()` from the ggplot package. `geom_vline` is use to represent the actual Moran I value.
 
+The code chunk below is to extract the res value and convert it to a dataframe format using `as.data.frame()` function. The code chunk will generate the density plot using `ggplot`.
+
 ```{r}
+# Fixed Distance Monte Carlo
+
 fd_monte_carlo <- as.data.frame(fd_MC[7])
 
-ggplot(fd_monte_carlo, aes(x=res)) + 
+fd_mc <- ggplot(fd_monte_carlo, aes(x=res)) + 
   geom_density(fill="lightblue") +
   geom_vline(aes(xintercept=0.42102),
             color="blue", linetype="dashed", size=1) +
   labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
-  theme_minimal()
-```
+  theme_minimal() +
+  theme(plot.title = element_text(size=8))
 
-```{r}
 fd_monte_carlo_fun <- as.data.frame(fd_MC_fun[7])
 
-ggplot(fd_monte_carlo_fun, aes(x=res)) + 
+fd_mc_fun <- ggplot(fd_monte_carlo_fun, aes(x=res)) + 
   geom_density(fill="lightblue") +
   geom_vline(aes(xintercept=0.56444),
             color="blue", linetype="dashed", size=1) +
   labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
-  theme_minimal() 
-```
+  theme_minimal() +
+  theme(plot.title = element_text(size=8)) 
 
-```{r}
+# Adaptive Distance Monte Carlo
+
 adp_monte_carlo <- as.data.frame(adp_MC[7])
 
-ggplot(adp_monte_carlo, aes(x=res)) + 
+ad_mc <- ggplot(adp_monte_carlo, aes(x=res)) + 
   geom_density(fill="lightblue") +
   geom_vline(aes(xintercept=0.5116),
             color="blue", linetype="dashed", size=1) +
   labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
-  theme_minimal() 
-```
+  theme_minimal() +
+  theme(plot.title = element_text(size=8)) 
 
-```{r}
 adp_monte_carlo_fun <- as.data.frame(adp_MC_fun[7])
 
-ggplot(adp_monte_carlo_fun, aes(x=res)) + 
+ad_mc_fun <- ggplot(adp_monte_carlo_fun, aes(x=res)) + 
   geom_density(fill="lightblue") +
   geom_vline(aes(xintercept=0.5638),
             color="blue", linetype="dashed", size=1) +
   labs(title = "Density plot of Monte Carlo Simulation of Moran's I", x = "Test Statistic", y = "Density") +
-  theme_minimal() 
+  theme_minimal() +
+  theme(plot.title = element_text(size=8))
 ```
+
+```{r}
+(fd_mc + fd_mc_fun) / (ad_mc + ad_mc_fun) 
+```
+
+### Interpretation of Monte Carlo Results
+
+Based on the above plots and results of the Monte Carlos Moran I test, we can conclude that all the results are statistically significant with a **p value \< 0.05** and all the Moran I values falls way to the right of the distribution suggesting that the functional and non functional water points are clustered (a positive Moran's I value suggests clustering).
 
 ## Cluster and Outlier Analysis
 
@@ -581,13 +594,13 @@ nigeria_localMI_adp <- cbind(nigeria_localMI_adp,localMI_adp_fun) %>%
 
 To better understand which area are outliers/clusters, we will visualise the Moran I values of each area using `tmap`. Firstly, we will filter all the areas that are not statistically significant (p value \>= 0.05). We will then plot the base nigeria map and overlay with the filtered map.
 
-Using choropleth mapping functions of tmap package, we can plot the local Moran's I values by using the code chunk below.
+Using choropleth mapping functions of `tmap` package, we can plot the local Moran's I values by using the code chunk below.
 
 ```{r, eval = FALSE}
 fd_moran <- tm_shape(nigeria_localMI_dw) +
   tm_fill("white") +
   tm_borders("grey", lwd = 0.5, alpha = 0.5) +
-  tm_shape(nigeria_localMI_dw[nigeria_localMI_dw$Pr.Ii <= 0.05,]) +
+  tm_shape(nigeria_localMI_dw[nigeria_localMI_dw$Pr.Ii < 0.05,]) +
   tm_fill (col = "Ii",
            style = "pretty",
            palette = "RdBu",
@@ -602,7 +615,7 @@ fd_moran <- tm_shape(nigeria_localMI_dw) +
 fd_moran_fun <- tm_shape(nigeria_localMI_dw) +
   tm_fill("white") +
   tm_borders("grey", lwd = 0.5, alpha = 0.5) +
-  tm_shape(nigeria_localMI_dw[nigeria_localMI_dw$Pr.Ii.fun <= 0.05,]) +
+  tm_shape(nigeria_localMI_dw[nigeria_localMI_dw$Pr.Ii.fun < 0.05,]) +
   tm_fill (col = "Ii.1",
            style = "pretty",
            palette = "RdBu",
@@ -625,7 +638,7 @@ knitr::include_graphics("tmap02.png")
 adp_moran <- tm_shape(nigeria_localMI_adp) +
   tm_fill("white") +
   tm_borders("grey", lwd = 0.5, alpha = 0.5) +
-  tm_shape(nigeria_localMI_adp[nigeria_localMI_adp$Pr.Ii <= 0.05,]) +
+  tm_shape(nigeria_localMI_adp[nigeria_localMI_adp$Pr.Ii < 0.05,]) +
   tm_fill (col = "Ii",
            style = "pretty",
            palette = "RdBu",
@@ -640,7 +653,7 @@ adp_moran <- tm_shape(nigeria_localMI_adp) +
 adp_moran_fun <- tm_shape(nigeria_localMI_adp) +
   tm_fill("white") +
   tm_borders("grey", lwd = 0.5, alpha = 0.5) +
-  tm_shape(nigeria_localMI_adp[nigeria_localMI_adp$Pr.Ii.fun <= 0.05,]) +
+  tm_shape(nigeria_localMI_adp[nigeria_localMI_adp$Pr.Ii.fun < 0.05,]) +
   tm_fill (col = "Ii.1",
            style = "pretty",
            palette = "RdBu",
@@ -671,12 +684,11 @@ We will now prepare the LISA map classes. We first need to retrieve the quadrant
 quadrant <- vector(mode="numeric",length=nrow(localMI_dw))
 ```
 
-Next, we scale the GDPPC.
+Next, we scale the the percentage for both functional and non functional water points.
 
 ```{r}
 DV <- scale(nigeria_localMI_dw$pct_nonfunctional)
 DV_Fun <- scale(nigeria_localMI_dw$pct_functional)   
-
 ```
 
 This is follow by finding the lag of the scaled percentage of functional and non-functional water point.
@@ -694,35 +706,79 @@ Using the Moran Scatterplot below, we filter all the area with p value \< 0.05 a
 MIplot <- data.frame(cbind(DV,C_mI,localMI_dw[,5]))
 MIplot <- MIplot %>%
   filter (X3 < 0.05)
-plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Fixed Distance", xlab = "scaled Non-Functional (%)", ylab = "Lag scaled Non-Functional (%)")
-abline(h = 0, v = 0)
+
+fd_MI_Plot <- ggplot(MIplot, aes(x = X1, y = X2)) +
+  geom_point() +
+  ylim(-2,1) +
+  xlim (-2,3) +
+  geom_hline(yintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  geom_vline(xintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  labs(title = "Moran Scatterplot Fixed Distance (Non-Functional)", x = "scaled Non-Functional (%)", y = "Lag scaled Non-Functional (%)") +
+  theme_classic() +
+  theme(plot.title = element_text(size=8))
 ```
 
 ```{r}
 MIplot <- data.frame(cbind(DV_Fun,C_mI,localMI_dw[,5]))
 MIplot <- MIplot %>%
   filter (X3 < 0.05)
-plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Fixed Distance", xlab = "scaled Functional (%)", ylab = "Lag scaled Functional (%)")
-abline(h = 0, v = 0)
+
+fd_MI_Plot_fun <- ggplot(MIplot, aes(x = X1, y = X2)) +
+  geom_point() +
+  ylim(-2,1) +
+  xlim (-2,3) +
+  geom_hline(yintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  geom_vline(xintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  labs(title = "Moran Scatterplot Fixed Distance (Functional)", x = "scaled Functional (%)", y = "Lag scaled Functional (%)") +
+  theme_classic() + 
+  theme(plot.title = element_text(size=8))
 ```
 
 ```{r}
 MIplot <- data.frame(cbind(DV,C_mI_adp,localMI_adp[,5]))
 MIplot <- MIplot %>%
   filter (X3 < 0.05)
-plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Adaptive Weight", xlab = "scaled Non-Functional (%)", ylab = "Lag scaled Non-Functional (%)")
-abline(h = 0, v = 0)
+
+ad_MI_Plot <- ggplot(MIplot, aes(x = X1, y = X2)) +
+  geom_point() +
+  ylim(-2,1) +
+  xlim (-2,3) +
+  geom_hline(yintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  geom_vline(xintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  labs(title = "Moran Scatterplot Adapative Distance (Non-Functional)", x = "scaled Non-Functional (%)", y = "Lag scaled Non-Functional (%)") +
+  theme_classic() +
+  theme(plot.title = element_text(size=8))
 ```
 
 ```{r}
 MIplot <- data.frame(cbind(DV_Fun,C_mI_adp_Fun,localMI_adp_fun[,5]))
 MIplot <- MIplot %>%
   filter (X3 < 0.05)
-plot(x = MIplot$X1, y = MIplot$X2, main = "Moran Scatterplot Adaptive Weight", xlab = "scaled Functional (%)", ylab = "Lag scaled Functional (%)")
-abline(h = 0, v = 0)
+
+ad_MI_Plot_fun <- ggplot(MIplot, aes(x = X1, y = X2)) +
+  geom_point() +
+  ylim(-2,1) +
+  xlim (-2,3) +
+  geom_hline(yintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  geom_vline(xintercept=0, linetype="dashed", 
+                color = "red", size=0.5) +
+  labs(title = "Moran Scatterplot Adapative Distance (Functional)", x = "scaled Functional (%)", y = "Lag scaled Functional (%)") +
+  theme_classic() +
+  theme(plot.title = element_text(size=8))
 ```
 
-We will now then define the quadrant based on the following criteria and place non-significant Moran (p value \< 0.05) in the category 0.:
+```{r}
+(fd_MI_Plot + fd_MI_Plot_fun)/(ad_MI_Plot + ad_MI_Plot_fun)
+```
+
+We will now then define the quadrant based on the following criteria and place non-significant Moran (p value \< 0.05) in the category 0:
 
 ```{r}
 signif <- 0.05 
@@ -757,50 +813,94 @@ nigeria_localMI_adp$quadrantfun <- quadrant
 
 ### Plotting LISA map
 
-Once the quadrant of each area has been decided, we will now plot the LISA map using `tmap`. We will plot both the base map with the GDDPC distribution and the LISA map to better understand the relationship.
+Once the quadrant of each area has been decided, we will now plot the LISA map using `tmap`.
 
-```{r}
+```{r, eval = FALSE}
 tmap_mode("plot")
 colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
 clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
 
-lisamap <- tm_shape(nigeria_localMI_dw) +
+lisamap_fd <- tm_shape(nigeria_localMI_dw) +
   tm_fill(col = "quadrant", 
           style = "cat", 
           palette = colors[c(sort(unique(quadrant)))+1], 
           labels = clusters[c(sort(unique(quadrant)))+1]) +
   tm_view(set.zoom.limits = c(11,17)) +
   tm_borders(alpha=0.5) +
-  tm_layout(main.title = "LISA Map with Quadrant", main.title.size = 0.7,
-            main.title.fontface = "bold", main.title.position = "center")
-```
+  tm_layout(main.title = "LISA Map (Non-Functional) with Quadrant",
+            main.title.size = 0.6,
+            main.title.fontface = "bold",
+            main.title.position = "center",
+            title = "Fixed Distance Weight",
+            title.size = 0.6)
 
-
-```{r}
-tmap_mode("plot")
-colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
-clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
-
-lisamap <- tm_shape(nigeria_localMI_adp) +
-  tm_fill(col = "quadrant", 
-          style = "cat", 
-          palette = colors[c(sort(unique(quadrant)))+1], 
-          labels = clusters[c(sort(unique(quadrant)))+1]) +
-  tm_view(set.zoom.limits = c(11,17)) +
-  tm_borders(alpha=0.5) +
-  tm_layout(main.title = "LISA Map (Non Functional) with Quadrant", main.title.size = 0.7,
-            main.title.fontface = "bold", main.title.position = "center")
-
-lisamapfun <- tm_shape(nigeria_localMI_adp) +
+lisamap_fd_fun <- tm_shape(nigeria_localMI_dw) +
   tm_fill(col = "quadrantfun", 
           style = "cat", 
           palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1],
+          title = "quadrant") +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5) +
+  tm_layout(main.title = "LISA Map (Functional) with Quadrant",
+            main.title.size = 0.6,
+            main.title.fontface = "bold",
+            main.title.position = "center",
+            title = "Fixed Distance Weight",
+            title.size = 0.6)
+```
+
+```{r, echo = FALSE, fig.align='center', fig.cap="LISA map of Fixed Distance (Non-Functional & Functional)"}
+knitr::include_graphics("tmap04.png")
+```
+
+```{r, eval = FALSE}
+tmap_mode("plot")
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+lisamap_ad <- tm_shape(nigeria_localMI_adp) +
+  tm_fill(col = "quadrant", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
           labels = clusters[c(sort(unique(quadrant)))+1]) +
   tm_view(set.zoom.limits = c(11,17)) +
   tm_borders(alpha=0.5) +
-  tm_layout(main.title = "LISA Map (Functional) with Quadrant", main.title.size = 0.7,
-            main.title.fontface = "bold", main.title.position = "center")
+  tm_layout(main.title = "LISA Map (Non Functional) with Quadrant",
+            main.title.size = 0.6,
+            main.title.fontface = "bold",
+            main.title.position = "center",
+            title = "Adaptive Distance Weight",
+            title.size = 0.6)
+
+lisamap_ad_fun <- tm_shape(nigeria_localMI_adp) +
+  tm_fill(col = "quadrantfun", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1],
+          title = "quadrant") +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5) +
+  tm_layout(main.title = "LISA Map (Functional) with Quadrant",
+            main.title.size = 0.6,
+            main.title.fontface = "bold",
+            main.title.position = "center",
+            title = "Adaptive Distance Weight",
+            title.size = 0.6)
+
+fixedD_Lisa <- tmap_arrange (lisamap_fd,lisamap_fd_fun, ncol = 2, widths = 10)
+adaptiveD_Lisa <- tmap_arrange (lisamap_ad,lisamap_ad_fun, ncol = 2, widths = 10)
 ```
+
+```{r, echo = FALSE, fig.align='center', fig.cap="LISA map of Adaptive Distance (Non-Functional & Functional)"}
+knitr::include_graphics("tmap05.png")
+```
+
+### Analysis of result
+
+For both distance weight methods, we can see that the **South West** region shows a **H-H** for non-functional water point percentage and a few regions shows a **L-L** and **L-H** for functional water point percentage. These regions should be prioritize for repair since they have their regions and neighbouring regions most likely have a lot of non-functional water point and also very little functional water point.
+
+What we can see from the map is also the **North East** region seems to have good access to water point with regions showing **H-H** for functional water point percentage and a **L-L** or **L-H** for non-functional water point percentage.
 
 ## Future Work
 
