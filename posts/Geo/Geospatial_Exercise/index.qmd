@@ -548,7 +548,7 @@ ad_mc_fun <- ggplot(adp_monte_carlo_fun, aes(x=res)) +
 (fd_mc + fd_mc_fun) / (ad_mc + ad_mc_fun) 
 ```
 
-### Interpretation of Monte Carlo Results
+#### Interpretation of Monte Carlo Results
 
 Based on the above plots and results of the Monte Carlos Moran I test, we can conclude that all the results are statistically significant with a **p value \< 0.05** and all the Moran I values falls way to the right of the distribution suggesting that the functional and non functional water points are clustered (a positive Moran's I value suggests clustering).
 
@@ -778,6 +778,12 @@ tmap_arrange (adp_moran, adp_moran_fun, asp = 1, ncol = 2)
 knitr::include_graphics("tmap03.png")
 ```
 
+### Interpretation of Local Moran I Map
+
+The local moran I mapping shows the area that are classified as clusters and outliers. From the Local Moran I plot, we can see that the clusters for Non-Functional water point are situation at the North-East region and Southern region. The functional water point are clustered at the northern region.
+
+But the limitation of the Moran I mapping is that there is no information on whether the value of the area is high or low percentage. We then have to use the Local Indicators of Spatial Association (LISA) map to show the different quadrant of the area based on their Moran I classification. (Outliers or Cluster)
+
 ### Creating a LISA Cluster Map
 
 The LISA Cluster Map shows the significant locations color coded by type of spatial autocorrelation. The first step before we can generate the LISA cluster map is to plot the Moran scatterplot.
@@ -916,6 +922,8 @@ For both distance weight methods, we can see that the **South West** region show
 
 What we can see from the map is also the **North East** region seems to have good access to water point with regions showing **H-H** for functional water point percentage and a **L-L** or **L-H** for non-functional water point percentage.
 
+The green marked circle shows the area of least concern while the blue marked circle shows the area of concern/focused that the organisation should pay attention to.
+
 ## Hotspot and Coldspot Analysis
 
 Getis-Ord Gi\* (G-I-star), another name for hotspot analysis, operates by examining each feature in the dataset in the context of nearby features in the same dataset. Despite having a high value, a feature can not be a statistically significant hotspot. A feature with a high value must be surrounded by other features with high values in order to constitute a significant hotspot.
@@ -924,7 +932,7 @@ Getis-Ord Gi\* (G-I-star), another name for hotspot analysis, operates by examin
 
 To generate the Z score for each region, we will use the `localG()` function that takes in the attribute and the neighbour list. Since the output of the `localG()` function is in a list, we will convert it to a data frame by using the `as.matrix()` function. We will do the following steps on both distance weight methods and for both functional and non functional percentage attribute.
 
-```{r, eval = FALSE}
+```{r}
 gi.adaptive <- as.matrix(localG(nigeria$pct_nonfunctional, bwm_apd))
 gi.adaptive_fun <- as.matrix(localG(nigeria$pct_functional, bwm_apd))
 nigeria.gi <- cbind(nigeria, gi.adaptive) %>%
@@ -942,11 +950,14 @@ nigeria.gi <- cbind(nigeria.gi, gi.fixed_fun) %>%
 
 ### Visualising Z score for Gertis-Ord Gi
 
-Once we have attained the Z score for each area, we will visualise the variable using `tmap`. The code chunk below will generate the map:
+Once we have attained the Z score for each area, we will have to filter the area with z score less than the given critical value of [**3.289**](https://r-spatial.github.io/spdep/reference/localG.html). We will then visualise the variable using `tmap`. 
 
-```{r, eval = FALSE}
+The code chunk below will generate the map:
+```{r}
 #Fixed Distance Gi Map
-Gimap_fixed <-tm_shape(nigeria.gi) +
+Gimap_fixed <- tm_shape(nigeria.gi) +
+  tm_borders(col = "lightgrey", alpha = 0.5) +
+  tm_shape(nigeria.gi[nigeria.gi$gstat_fixed < -3.289 | nigeria.gi$gstat_fixed > 3.289,]) +
   tm_fill(col = "gstat_fixed", 
           style = "pretty",
           palette="-RdBu",
@@ -960,6 +971,8 @@ Gimap_fixed <-tm_shape(nigeria.gi) +
             title.size = 0.6)
 
 Gimap_fixed_fun <-tm_shape(nigeria.gi) +
+  tm_borders(col = "lightgrey", alpha = 0.5) +
+  tm_shape(nigeria.gi[nigeria.gi$gstat_fixed_fun < -3.289 | nigeria.gi$gstat_fixed_fun > 3.289,]) +
   tm_fill(col = "gstat_fixed_fun", 
           style = "pretty",
           palette="-RdBu",
@@ -976,6 +989,8 @@ tmap_arrange(Gimap_fixed,Gimap_fixed_fun)
 
 #Adaptive Distance Gi Map
 Gimap_adaptive <-tm_shape(nigeria.gi) +
+  tm_borders(col = "lightgrey", alpha = 0.5) +
+  tm_shape(nigeria.gi[nigeria.gi$gstat_adaptive < -3.289 | nigeria.gi$gstat_adaptive > 3.289,]) +
   tm_fill(col = "gstat_adaptive", 
           style = "pretty",
           palette="-RdBu",
@@ -989,6 +1004,8 @@ Gimap_adaptive <-tm_shape(nigeria.gi) +
             title.size = 0.6)
 
 Gimap_adaptive_fun <-tm_shape(nigeria.gi) +
+  tm_borders(col = "lightgrey", alpha = 0.5) +
+  tm_shape(nigeria.gi[nigeria.gi$gstat_adaptive_fun < -3.289 | nigeria.gi$gstat_adaptive_fun > 3.289,]) +
   tm_fill(col = "gstat_adaptive_fun", 
           style = "pretty",
           palette="-RdBu",
@@ -1003,20 +1020,11 @@ Gimap_adaptive_fun <-tm_shape(nigeria.gi) +
 
 tmap_arrange(Gimap_adaptive,Gimap_adaptive_fun)
 ```
-
-```{r, echo = FALSE, fig.align='center', fig.cap="Gi map of Fixed Distance (Non-Functional & Functional)"}
-knitr::include_graphics("tmap06.png")
-```
-
-```{r, echo = FALSE, fig.align='center', fig.cap="Gi map of Adaptive Distance (Non-Functional & Functional)"}
-knitr::include_graphics("tmap07.png")
-```
-
 ### Analysis of Gi map result
 
-The results from the Gi map seems to align to what the LISA map have shown. From the Gi Map, we can see the southern area having more **clustered** non-functional water point and **dispersed** functional water point. This would likely be the priority of repair if resources are limited.
+The results from the Gi map seems to align to what the LISA map have shown. From the Gi Map, we can see the southern area having more **clustered** non-functional water point and does not see any significance of clustered or dispersed functional water point. This would likely be the priority of repair if resources are limited.
 
-Similarly, the map also shows more **clustered** functional water point and **dispersed** non-functional water point at the northern regions.
+Similarly, the map on the right also shows more **clustered** functional water point at the northern regions and dispersed functional water points at the southern region.
 
 The result of both LISA map and Gi map shows consistency in the area of concerns and area of focused. This is align to the recent initiatives by [**ENI**](https://www.eni.com/en-IT/operations/access-water-resources-nigeria.html) that focus on ensuring water access to the North-East region of Nigeria that shows why these regions are not an area of concern. The study by [**Adebayo Oluwole Eludoyin**](https://www.researchgate.net/publication/348850042_Accessibility_to_safe_drinking_water_in_selected_urban_communities_in_southwest_Nigeria) also substantiate our claim on the importance of focusing on the South-West region of Nigeria to improve the water access for it's population.
 
