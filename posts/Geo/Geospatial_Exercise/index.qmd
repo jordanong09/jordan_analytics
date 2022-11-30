@@ -287,7 +287,7 @@ By looking at the two chloropleth map, we can make 2 **inference**: - The northe
 
 Now, answering the business question, should we focus our resources in repairing the water tap located at the southern region? Are there any more regions that require our attention? We will now proceed to conduct geospatial analysis to justify or rebut the claims made based on the choropleth map.
 
-## LISA Cluster Map
+## GeoSpatial Autocorrelation
 
 ### Introduction
 
@@ -556,6 +556,8 @@ Based on the above plots and results of the Monte Carlos Moran I test, we can co
 
 ## Cluster and Outlier Analysis
 
+The Cluster and Outlier Analysis tool locates spatial clusters of features with high or low values given a set of features (Input Feature Class) and an analysis field (Input Field). Additionally, the program finds spatial outliers. For each statistically significant feature, the tool determines a local Moran's I value, a z-score, a pseudo p-value, and a code designating the cluster type. The statistical significance of the obtained index values is represented by the z-scores and pseudo p-values.
+
 ### Computing local Moran's I
 
 To compute local Moran's I, the [*localmoran()*](https://r-spatial.github.io/spdep/reference/localmoran.html) function of **spdep** will be used. It computes *Ii* values, given a set of *zi* values and a listw object providing neighbour weighting information for the polygon associated with the zi values.
@@ -778,11 +780,11 @@ tmap_arrange (adp_moran, adp_moran_fun, asp = 1, ncol = 2)
 knitr::include_graphics("tmap03.png")
 ```
 
-## Creating a LISA Cluster Map
+### Creating a LISA Cluster Map
 
 The LISA Cluster Map shows the significant locations color coded by type of spatial autocorrelation. The first step before we can generate the LISA cluster map is to plot the Moran scatterplot.
 
-### Preparing LISA map classes
+#### Preparing LISA map classes
 
 We will now prepare the LISA map classes. We first need to retrieve the quadrant for each area.
 
@@ -825,7 +827,7 @@ quadrant[localMI_adp[,5]>signif] <- 0
 nigeria_localMI_adp$quadrantfun <- quadrant
 ```
 
-### Plotting LISA map
+#### Plotting LISA map
 
 Once the quadrant of each area has been decided, we will now plot the LISA map using `tmap`.
 
@@ -910,7 +912,7 @@ adaptiveD_Lisa <- tmap_arrange (lisamap_ad,lisamap_ad_fun, ncol = 2, widths = 10
 knitr::include_graphics("tmap05.png")
 ```
 
-### Analysis of LISA map result
+#### Analysis of LISA map result
 
 For both distance weight methods, we can see that the **South West** region shows a **H-H** for non-functional water point percentage and a few regions shows a **L-L** and **L-H** for functional water point percentage. These regions should be prioritize for repair since they have their regions and neighbouring regions most likely have a lot of non-functional water point and also very little functional water point.
 
@@ -918,7 +920,7 @@ What we can see from the map is also the **North East** region seems to have goo
 
 ## Hotspot and Coldspot Analysis
 
-Getis-Ord Gi* (G-I-star), another name for hotspot analysis, operates by examining each feature in the dataset in the context of nearby features in the same dataset. Despite having a high value, a feature can not be a statistically significant hotspot. A feature with a high value must be surrounded by other features with high values in order to constitute a significant hotspot.
+Getis-Ord Gi\* (G-I-star), another name for hotspot analysis, operates by examining each feature in the dataset in the context of nearby features in the same dataset. Despite having a high value, a feature can not be a statistically significant hotspot. A feature with a high value must be surrounded by other features with high values in order to constitute a significant hotspot.
 
 ### Generating Z score for Gertis-Ord Gi
 
@@ -1022,7 +1024,7 @@ The result of both LISA map and Gi map shows consistency in the area of concerns
 
 ## Conclusion
 
-Geospatial Autocorrelation remains an important tool for organization to better allocate limited resources to solve any issues. The use of LISA and Gi map will allow organisation to better understand the geographical relationship based on the attribute analysed and enhance the quality of decision-making. 
+Geospatial Autocorrelation remains an important tool for organization to better allocate limited resources to solve any issues. The use of LISA and Gi map will allow organisation to better understand the geographical relationship based on the attribute analysed and enhance the quality of decision-making.
 
 ## Future Work
 
@@ -1030,9 +1032,7 @@ To enhance the quality of research and analysis, I proposed to enhance the resul
 
 -   **Population** - Instead of purely looking at the proportion of functional and non-functional water point, population of area can be considered to understand the needs of the region based on it's population size. Tap per population must be considered to provide a better understanding of what the region is lacking and which region should be an area of focus to increase water access.
 
-- **k-nearest neighbour** - Due to the short timeframe I have to conduct this analysis, I proposed to have more samples for different neighbours and compare the results. This will better justify the regions that are indeed an area of concern.
-
-
+-   **k-nearest neighbour** - Due to the short timeframe I have to conduct this analysis, I proposed to have more samples for different neighbours and compare the results. This will better justify the regions that are indeed an area of concern.
 
 ```{r future use, eval = FALSE, echo= FALSE}
 # Firstly, we will create another column using the `mutate()` and change all *ADM2_NAME* to lowercase using `tolower()`. We will then rename the column *T_TL* to *T_Population* for ease of understanding. Since we only require the total population and the *shapeName* associated to the population, we will use to `select()` function to only retain the respective columns.
