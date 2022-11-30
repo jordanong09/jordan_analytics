@@ -32,9 +32,7 @@ Only half of rural families have access to improved sanitation, and 39% of house
 
 Geospatial analytics hold tremendous potential to address complex problems facing society. In this study, I will be applying appropriate global and local measures of spatial Association techniques to **reveals the spatial patterns of Not Functional water points**.
 
-## Introduction
-
-## Libraries
+### Libraries
 
 For this study, we will use the following packages from CRAN.
 
