@@ -30,7 +30,7 @@ Only half of rural families have access to improved sanitation, and 39% of house
 
 ### Problem Statement
 
-Geospatial analytics hold tremendous potential to address complex problems facing society. In this study, I will be applying appropriate global and local measures of spatial Association techniques to **reveals the spatial patterns of Not Functional water points**.
+Geospatial analytics hold tremendous potential to address complex problems facing society. In this study, I will be applying appropriate global and local measures of spatial Association techniques to **reveals the spatial patterns of Non-Functional water points**.
 
 ### Libraries
 
@@ -831,6 +831,11 @@ quadrant[localMI_adp[,5]>signif] <- 0
 nigeria_localMI_adp$quadrantfun <- quadrant
 ```
 
+```{r}
+h <- nigeria_localMI_dw[nigeria_localMI_dw$quadrant != 0,]
+```
+
+
 #### Plotting LISA map
 
 Once the quadrant of each area has been decided, we will now plot the LISA map using `tmap`.
@@ -950,14 +955,15 @@ nigeria.gi <- cbind(nigeria.gi, gi.fixed_fun) %>%
 
 ### Visualising Z score for Gertis-Ord Gi
 
-Once we have attained the Z score for each area, we will have to filter the area with z score less than the given critical value of [**3.289**](https://r-spatial.github.io/spdep/reference/localG.html). We will then visualise the variable using `tmap`. 
+Once we have attained the Z score for each area, we will have to filter the area with z score less than the given critical value of [**3.886**](https://r-spatial.github.io/spdep/reference/localG.html). Since we are doing a two-tailed test, we will halve the critical value and check for **Z score < - CV/2** and **Z score > CV/2**. We will then visualise the variable using `tmap`.
 
 The code chunk below will generate the map:
+
 ```{r}
 #Fixed Distance Gi Map
 Gimap_fixed <- tm_shape(nigeria.gi) +
   tm_borders(col = "lightgrey", alpha = 0.5) +
-  tm_shape(nigeria.gi[nigeria.gi$gstat_fixed < -3.289 | nigeria.gi$gstat_fixed > 3.289,]) +
+  tm_shape(nigeria.gi[nigeria.gi$gstat_fixed < -1.943 | nigeria.gi$gstat_fixed > 1.943,]) +
   tm_fill(col = "gstat_fixed", 
           style = "pretty",
           palette="-RdBu",
@@ -972,7 +978,7 @@ Gimap_fixed <- tm_shape(nigeria.gi) +
 
 Gimap_fixed_fun <-tm_shape(nigeria.gi) +
   tm_borders(col = "lightgrey", alpha = 0.5) +
-  tm_shape(nigeria.gi[nigeria.gi$gstat_fixed_fun < -3.289 | nigeria.gi$gstat_fixed_fun > 3.289,]) +
+  tm_shape(nigeria.gi[nigeria.gi$gstat_fixed_fun < -1.943 | nigeria.gi$gstat_fixed_fun > 1.943,]) +
   tm_fill(col = "gstat_fixed_fun", 
           style = "pretty",
           palette="-RdBu",
@@ -990,7 +996,7 @@ tmap_arrange(Gimap_fixed,Gimap_fixed_fun)
 #Adaptive Distance Gi Map
 Gimap_adaptive <-tm_shape(nigeria.gi) +
   tm_borders(col = "lightgrey", alpha = 0.5) +
-  tm_shape(nigeria.gi[nigeria.gi$gstat_adaptive < -3.289 | nigeria.gi$gstat_adaptive > 3.289,]) +
+  tm_shape(nigeria.gi[nigeria.gi$gstat_adaptive < -1.943 | nigeria.gi$gstat_adaptive > 1.943,]) +
   tm_fill(col = "gstat_adaptive", 
           style = "pretty",
           palette="-RdBu",
@@ -1005,7 +1011,7 @@ Gimap_adaptive <-tm_shape(nigeria.gi) +
 
 Gimap_adaptive_fun <-tm_shape(nigeria.gi) +
   tm_borders(col = "lightgrey", alpha = 0.5) +
-  tm_shape(nigeria.gi[nigeria.gi$gstat_adaptive_fun < -3.289 | nigeria.gi$gstat_adaptive_fun > 3.289,]) +
+  tm_shape(nigeria.gi[nigeria.gi$gstat_adaptive_fun < -1.943 | nigeria.gi$gstat_adaptive_fun > 1.943,]) +
   tm_fill(col = "gstat_adaptive_fun", 
           style = "pretty",
           palette="-RdBu",
@@ -1020,6 +1026,7 @@ Gimap_adaptive_fun <-tm_shape(nigeria.gi) +
 
 tmap_arrange(Gimap_adaptive,Gimap_adaptive_fun)
 ```
+
 ### Analysis of Gi map result
 
 The results from the Gi map seems to align to what the LISA map have shown. From the Gi Map, we can see the southern area having more **clustered** non-functional water point and does not see any significance of clustered or dispersed functional water point. This would likely be the priority of repair if resources are limited.
