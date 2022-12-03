@@ -266,7 +266,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <a href="https://cran.r-project.org/web/packages/spdep/index.html"><code>spdep</code></a> - A collection of functions to create spatial weights matrix objects from polygon ‘contiguities’, from point patterns by distance and tessellations, for summarizing these objects, and for permitting their use in spatial data analysis, including regional aggregation by minimum spanning tree; a collection of tests for spatial ‘autocorrelation’</li>
 </ul>
 <div class="cell">
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">pacman</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pacman/man/p_load.html">p_load</a></span><span class="op">(</span><span class="va">sf</span>, <span class="va">spdep</span>, <span class="va">tmap</span>, <span class="va">tidyverse</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">pacman</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pacman/man/p_load.html">p_load</a></span><span class="op">(</span><span class="va">sf</span>, <span class="va">spdep</span>, <span class="va">tmap</span>, <span class="va">tidyverse</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section><section id="data-preparation" class="level2"><h2 class="anchored" data-anchor-id="data-preparation">Data Preparation</h2>
 <p>Two dataset will be used for this study:</p>
@@ -277,13 +278,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="importing-of-data" class="level3"><h3 class="anchored" data-anchor-id="importing-of-data">Importing of data</h3>
 <p>We will use the <em>st_read</em> to import the shape file and <em>read_csv</em> to import the aspatial data into the R environment. We will then use a relational join <em>left_join</em> to combine the spatial and aspatial data together.</p>
 <div class="cell">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">hunan</span> <span class="op">&lt;-</span> <span class="fu">st_read</span><span class="op">(</span>dsn <span class="op">=</span> <span class="st">"data/geospatial"</span>, 
+<details><summary>Show the code</summary><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">hunan</span> <span class="op">&lt;-</span> <span class="fu">st_read</span><span class="op">(</span>dsn <span class="op">=</span> <span class="st">"data/geospatial"</span>, 
                  layer <span class="op">=</span> <span class="st">"Hunan"</span><span class="op">)</span>
 
 <span class="va">hunan2012</span> <span class="op">&lt;-</span> <span class="fu">read_csv</span><span class="op">(</span><span class="st">"data/aspatial/Hunan_2012.csv"</span><span class="op">)</span>
 
 
 <span class="va">hunan</span> <span class="op">&lt;-</span> <span class="fu">left_join</span><span class="op">(</span><span class="va">hunan</span>,<span class="va">hunan2012</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell">
 
@@ -291,14 +293,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section></section><section id="visualisation-of-spatial-data" class="level2"><h2 class="anchored" data-anchor-id="visualisation-of-spatial-data">Visualisation of spatial data</h2>
 <p>For the visualisation, we will only be using <code>tmap</code> to show the distribution of GDPPC 2021.</p>
 <div class="cell">
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span> <span class="op">+</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_fill</span><span class="op">(</span><span class="st">"GDPPC"</span>,
           n <span class="op">=</span> <span class="fl">5</span>,
           style <span class="op">=</span> <span class="st">"quantile"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_borders</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_layout</span><span class="op">(</span>main.title <span class="op">=</span> <span class="st">"GDDPC using Quantile classification"</span>, main.title.size <span class="op">=</span> <span class="fl">0.7</span>,
             main.title.fontface <span class="op">=</span> <span class="st">"bold"</span>, main.title.position <span class="op">=</span> <span class="st">"center"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
@@ -307,14 +309,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="computing-contiguity-spatial-weights" class="level3"><h3 class="anchored" data-anchor-id="computing-contiguity-spatial-weights">Computing Contiguity Spatial Weights</h3>
 <p>For this study, we will be using the Queen contiguity weight matrix. The code chunk below will construct the weight matrix and subsequently implement the row-standardised weight matrix using the <code>nb2listw()</code> function.</p>
 <div class="cell">
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">wm_q</span> <span class="op">&lt;-</span> <span class="fu">poly2nb</span><span class="op">(</span><span class="va">hunan</span>, 
+<details><summary>Show the code</summary><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">wm_q</span> <span class="op">&lt;-</span> <span class="fu">poly2nb</span><span class="op">(</span><span class="va">hunan</span>, 
                 queen<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
 
 <span class="va">rswm_q</span> <span class="op">&lt;-</span> <span class="fu">nb2listw</span><span class="op">(</span><span class="va">wm_q</span>, 
                    style<span class="op">=</span><span class="st">"W"</span>, 
                    zero.policy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="va">rswm_q</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
+</details><div class="cell-output cell-output-stdout">
 <pre><code>Characteristics of weights list object:
 Neighbour list object:
 Number of regions: 88 
@@ -331,11 +333,11 @@ W 88 7744 88 37.86334 365.9147</code></pre>
 </section><section id="global-spatial-autocorrelation-morans-i" class="level3"><h3 class="anchored" data-anchor-id="global-spatial-autocorrelation-morans-i">Global Spatial Autocorrelation: Moran’s I</h3>
 <p>We will now perform Moran’s I statistics testing by using the <a href="https://r-spatial.github.io/spdep/reference/moran.test.html"><em>moran.test()</em></a> from <strong>spdep</strong>.</p>
 <div class="cell">
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">moran.test</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, 
+<details><summary>Show the code</summary><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">moran.test</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, 
            listw<span class="op">=</span><span class="va">rswm_q</span>, 
            zero.policy <span class="op">=</span> <span class="cn">TRUE</span>, 
            na.action<span class="op">=</span><span class="va">na.omit</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
+</details><div class="cell-output cell-output-stdout">
 <pre><code>
     Moran I test under randomisation
 
@@ -377,14 +379,14 @@ Moran I statistic       Expectation          Variance
 <section id="computing-monte-carlo-morans-i" class="level4"><h4 class="anchored" data-anchor-id="computing-monte-carlo-morans-i">Computing Monte Carlo Moran’s I</h4>
 <p>The code chunk below performs permutation test for Moran’s I statistic by using <a href="https://r-spatial.github.io/spdep/reference/moran.mc.html"><code>moran.mc()</code></a> of spdep. A total of 1000 simulation will be performed.</p>
 <div class="cell">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span>
 <span class="va">bperm</span><span class="op">=</span> <span class="fu">moran.mc</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, 
                 listw<span class="op">=</span><span class="va">rswm_q</span>, 
                 nsim<span class="op">=</span><span class="fl">999</span>, 
                 zero.policy <span class="op">=</span> <span class="cn">TRUE</span>, 
                 na.action<span class="op">=</span><span class="va">na.omit</span><span class="op">)</span>
 <span class="va">bperm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
+</details><div class="cell-output cell-output-stdout">
 <pre><code>
     Monte-Carlo simulation of Moran I
 
@@ -399,7 +401,7 @@ alternative hypothesis: greater</code></pre>
 </section><section id="visualising-monte-carlo-morans-i" class="level4"><h4 class="anchored" data-anchor-id="visualising-monte-carlo-morans-i">Visualising Monte Carlo Moran’s I</h4>
 <p>We will use a density plot to visualise the output of the Monte Carlo Moran’s I. First, we need to extract the <code>res</code> value and convert it into a dataframe. We then visualise the test statistic result using <code>geom_density</code> from the ggplot package.</p>
 <div class="cell">
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">monte_carlo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="va">bperm</span><span class="op">[</span><span class="fl">7</span><span class="op">]</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">monte_carlo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="va">bperm</span><span class="op">[</span><span class="fl">7</span><span class="op">]</span><span class="op">)</span>
 
 <span class="fu">ggplot</span><span class="op">(</span><span class="va">monte_carlo</span>, <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">res</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
   <span class="fu">geom_density</span><span class="op">(</span>fill<span class="op">=</span><span class="st">"lightblue"</span><span class="op">)</span> <span class="op">+</span>
@@ -407,7 +409,7 @@ alternative hypothesis: greater</code></pre>
             color<span class="op">=</span><span class="st">"blue"</span>, linetype<span class="op">=</span><span class="st">"dashed"</span>, size<span class="op">=</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">labs</span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Density plot of Monte Carlo Simulation of Moran's I"</span>, x <span class="op">=</span> <span class="st">"Test Statistic"</span>, y <span class="op">=</span> <span class="st">"Density"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">theme_minimal</span><span class="op">(</span><span class="op">)</span> </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
@@ -415,8 +417,8 @@ alternative hypothesis: greater</code></pre>
 </section></section><section id="global-spatial-autocorrelation-gearys" class="level3"><h3 class="anchored" data-anchor-id="global-spatial-autocorrelation-gearys">Global Spatial Autocorrelation: Geary’s</h3>
 <p>We will now perform the Geary’c statistic testing by using the <a href="https://r-spatial.github.io/spdep/reference/geary.test.html"><code>geary.test()</code></a> function. We will also compute the Monte Carlo Geary’sc using the <a href="https://r-spatial.github.io/spdep/reference/geary.mc.html"><code>geary.mc</code></a>.</p>
 <div class="cell">
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">geary.test</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, listw<span class="op">=</span><span class="va">rswm_q</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
+<details><summary>Show the code</summary><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">geary.test</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, listw<span class="op">=</span><span class="va">rswm_q</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><div class="cell-output cell-output-stdout">
 <pre><code>
     Geary C test under randomisation
 
@@ -429,12 +431,12 @@ sample estimates:
 Geary C statistic       Expectation          Variance 
         0.6907223         1.0000000         0.0073364 </code></pre>
 </div>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span>
 <span class="va">gperm</span><span class="op">=</span><span class="fu">geary.mc</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, 
                listw<span class="op">=</span><span class="va">rswm_q</span>, 
                nsim<span class="op">=</span><span class="fl">999</span><span class="op">)</span>
 <span class="va">gperm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
+</details><div class="cell-output cell-output-stdout">
 <pre><code>
     Monte-Carlo simulation of Geary C
 
@@ -449,7 +451,7 @@ alternative hypothesis: greater</code></pre>
 <p>Based on the result, the p-value is below the alpha value of 0.05 and therefore we can statistical evidence to reject the null hypothesis.</p>
 <section id="visualising-the-monte-carlo-gearys-c" class="level4"><h4 class="anchored" data-anchor-id="visualising-the-monte-carlo-gearys-c">Visualising the Monte Carlo Geary’s C</h4>
 <div class="cell">
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">monte_carlo_geary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="va">gperm</span><span class="op">[</span><span class="fl">7</span><span class="op">]</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">monte_carlo_geary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="va">gperm</span><span class="op">[</span><span class="fl">7</span><span class="op">]</span><span class="op">)</span>
 
 <span class="fu">ggplot</span><span class="op">(</span><span class="va">monte_carlo_geary</span>, <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">res</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
   <span class="fu">geom_density</span><span class="op">(</span>fill<span class="op">=</span><span class="st">"lightblue"</span><span class="op">)</span> <span class="op">+</span>
@@ -457,7 +459,7 @@ alternative hypothesis: greater</code></pre>
             color<span class="op">=</span><span class="st">"blue"</span>, linetype<span class="op">=</span><span class="st">"dashed"</span>, size<span class="op">=</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">labs</span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Density plot of Monte Carlo Simulation of Geary’s C"</span>, x <span class="op">=</span> <span class="st">"Test Statistic"</span>, y <span class="op">=</span> <span class="st">"Density"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">theme_minimal</span><span class="op">(</span><span class="op">)</span> </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
@@ -473,17 +475,17 @@ alternative hypothesis: greater</code></pre>
 </ul>
 <p>We will illustrate the Moran’s I correlogram.</p>
 <div class="cell">
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">MI_corr</span> <span class="op">&lt;-</span> <span class="fu">sp.correlogram</span><span class="op">(</span><span class="va">wm_q</span>, 
+<details><summary>Show the code</summary><div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">MI_corr</span> <span class="op">&lt;-</span> <span class="fu">sp.correlogram</span><span class="op">(</span><span class="va">wm_q</span>, 
                           <span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, 
                           order<span class="op">=</span><span class="fl">6</span>, 
                           method<span class="op">=</span><span class="st">"I"</span>, 
                           style<span class="op">=</span><span class="st">"W"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">MI_corr</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
 </div>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">MI_corr</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
+<details><summary>Show the code</summary><div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">MI_corr</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><div class="cell-output cell-output-stdout">
 <pre><code>Spatial correlogram for hunan$GDPPC 
 method: Moran's I
          estimate expectation   variance standard deviate Pr(I) two sided    
@@ -499,17 +501,17 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 <p>Now, we will illustrate the Geary’C correlogram.</p>
 <div class="cell">
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">GC_corr</span> <span class="op">&lt;-</span> <span class="fu">sp.correlogram</span><span class="op">(</span><span class="va">wm_q</span>, 
+<details><summary>Show the code</summary><div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">GC_corr</span> <span class="op">&lt;-</span> <span class="fu">sp.correlogram</span><span class="op">(</span><span class="va">wm_q</span>, 
                           <span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, 
                           order<span class="op">=</span><span class="fl">6</span>, 
                           method<span class="op">=</span><span class="st">"C"</span>, 
                           style<span class="op">=</span><span class="st">"W"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">GC_corr</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
 </div>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">GC_corr</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
+<details><summary>Show the code</summary><div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">GC_corr</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><div class="cell-output cell-output-stdout">
 <pre><code>Spatial correlogram for hunan$GDPPC 
 method: Geary's C
         estimate expectation  variance standard deviate Pr(I) two sided    
@@ -530,10 +532,10 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <section id="computing-local-morans-i" class="level3"><h3 class="anchored" data-anchor-id="computing-local-morans-i">Computing local Moran’s I</h3>
 <p>To compute local Moran’s I, the <a href="https://r-spatial.github.io/spdep/reference/localmoran.html"><em>localmoran()</em></a> function of <strong>spdep</strong> will be used. It computes <em>Ii</em> values, given a set of <em>zi</em> values and a listw object providing neighbour weighting information for the polygon associated with the zi values.</p>
 <div class="cell">
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">fips</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">fips</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span><span class="op">)</span>
 <span class="va">localMI</span> <span class="op">&lt;-</span> <span class="fu">localmoran</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, <span class="va">rswm_q</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">localMI</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
+</details><div class="cell-output cell-output-stdout">
 <pre><code>            Ii          E.Ii       Var.Ii        Z.Ii Pr(z != E(Ii))
 1 -0.001468468 -2.815006e-05 4.723841e-04 -0.06626904      0.9471636
 2  0.025878173 -6.061953e-04 1.016664e-02  0.26266425      0.7928094
@@ -554,8 +556,8 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <p>The z-scores and pseudo p-values represent the statistical significance of the computed index values.</p>
 <p>The code chunk below list the content of the local Moran matrix derived by using <a href="https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/printCoefmat"><em>printCoefmat()</em></a>.</p>
 <div class="cell">
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/stats/printCoefmat.html">printCoefmat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">localMI</span><span class="op">[</span><span class="va">fips</span>,<span class="op">]</span>, row.names<span class="op">=</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span><span class="op">[</span><span class="va">fips</span><span class="op">]</span><span class="op">)</span>, check.names<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
+<details><summary>Show the code</summary><div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/stats/printCoefmat.html">printCoefmat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">localMI</span><span class="op">[</span><span class="va">fips</span>,<span class="op">]</span>, row.names<span class="op">=</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span><span class="op">[</span><span class="va">fips</span><span class="op">]</span><span class="op">)</span>, check.names<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><div class="cell-output cell-output-stdout">
 <pre><code>                       Ii        E.Ii      Var.Ii        Z.Ii Pr.z....E.Ii..
 Anhua         -2.2493e-02 -5.0048e-03  5.8235e-02 -7.2467e-02         0.9422
 Anren         -3.9932e-01 -7.0111e-03  7.0348e-02 -1.4791e+00         0.1391
@@ -650,19 +652,20 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 </section><section id="mapping-the-local-morans-i" class="level3"><h3 class="anchored" data-anchor-id="mapping-the-local-morans-i">Mapping the local Moran’s I</h3>
 <p>We have to combine the local Moran’s dataframe with the our exisiting <code>Hunan</code> spatialdataframe before plotting. We will use the <code><a href="https://rdrr.io/r/base/cbind.html">cbind()</a></code> function.</p>
 <div class="cell">
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">hunan.localMI</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">hunan</span>,<span class="va">localMI</span><span class="op">)</span> <span class="op">%&gt;%</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">hunan.localMI</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">hunan</span>,<span class="va">localMI</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">rename</span><span class="op">(</span>Pr.Ii <span class="op">=</span> <span class="va">Pr.z....E.Ii..</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section><section id="mapping-local-morans-i-values" class="level3"><h3 class="anchored" data-anchor-id="mapping-local-morans-i-values">Mapping local Moran’s I values</h3>
 <p>Using choropleth mapping functions of tmap package, we can plot the local Moran’s I values by using the code chinks below.</p>
 <div class="cell">
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.localMI</span><span class="op">)</span> <span class="op">+</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.localMI</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_fill</span><span class="op">(</span>col <span class="op">=</span> <span class="st">"Ii"</span>, 
           style <span class="op">=</span> <span class="st">"pretty"</span>,
           palette <span class="op">=</span> <span class="st">"RdBu"</span>,
           title <span class="op">=</span> <span class="st">"Local Moran I value"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_borders</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
@@ -670,20 +673,20 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 </section><section id="mapping-local-morans-i-p-values" class="level3"><h3 class="anchored" data-anchor-id="mapping-local-morans-i-p-values">Mapping local Moran’s I p-values</h3>
 <p>The code chunks below produce a choropleth map of Moran’s I p-values by using functions of tmap package.</p>
 <div class="cell">
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.localMI</span><span class="op">)</span> <span class="op">+</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.localMI</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_fill</span><span class="op">(</span>col <span class="op">=</span> <span class="st">"Pr.Ii"</span>, 
           breaks<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="cn">Inf</span>, <span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="cn">Inf</span><span class="op">)</span>,
           palette<span class="op">=</span><span class="st">"-Blues"</span>, 
           title <span class="op">=</span> <span class="st">"Local Moran's I p-values"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_borders</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <section id="mapping-morans-i-values-and-p-values" class="level4"><h4 class="anchored" data-anchor-id="mapping-morans-i-values-and-p-values">Mapping Moran’s I values and p-values</h4>
 <p>It will be more useful to understand which area Moran’s I value is statistically significant. We will create another dataframe with only areas that are statistically significant with a p value &lt; 0.05. We will then plot the overlay above the base map and identify the area with positive and negative I value.</p>
 <div class="cell">
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">hunan.localMI.sub</span> <span class="op">&lt;-</span> <span class="va">hunan.localMI</span> <span class="op">%&gt;%</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">hunan.localMI.sub</span> <span class="op">&lt;-</span> <span class="va">hunan.localMI</span> <span class="op">%&gt;%</span>
   <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span> <span class="op">(</span><span class="va">Pr.Ii</span> <span class="op">&lt;=</span> <span class="fl">0.05</span><span class="op">)</span>
 
 <span class="va">imap</span> <span class="op">&lt;-</span> <span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.localMI</span><span class="op">)</span> <span class="op">+</span>
@@ -700,7 +703,7 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
             main.title.fontface <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>
 
 <span class="va">imap</span> </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
@@ -711,11 +714,11 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 <p>The Moran scatterplot is an illustration of the relationship between the values of the chosen attribute at each location and the average value of the same attribute at neighboring locations.</p>
 <p>The code chunk below plots the Moran scatterplot of GDPPC 2012 by using <a href="https://r-spatial.github.io/spdep/reference/moran.plot.html"><em>moran.plot()</em></a> of <strong>spdep</strong>.</p>
 <div class="cell">
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">nci</span> <span class="op">&lt;-</span> <span class="fu">moran.plot</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, <span class="va">rswm_q</span>,
+<details><summary>Show the code</summary><div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">nci</span> <span class="op">&lt;-</span> <span class="fu">moran.plot</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, <span class="va">rswm_q</span>,
                   labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/character.html">as.character</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span><span class="op">)</span>, 
                   xlab<span class="op">=</span><span class="st">"GDPPC 2012"</span>, 
                   ylab<span class="op">=</span><span class="st">"Spatially Lag GDPPC 2012"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
@@ -723,40 +726,44 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 </section><section id="preparing-lisa-map-classes" class="level3"><h3 class="anchored" data-anchor-id="preparing-lisa-map-classes">Preparing LISA map classes</h3>
 <p>We will now prepare the LISA map classes. We first need to retrieve the quadrant for each area.</p>
 <div class="cell">
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">quadrant</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html">vector</a></span><span class="op">(</span>mode<span class="op">=</span><span class="st">"numeric"</span>,length<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">localMI</span><span class="op">)</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">quadrant</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html">vector</a></span><span class="op">(</span>mode<span class="op">=</span><span class="st">"numeric"</span>,length<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">localMI</span><span class="op">)</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Next, we scale the GDPPC.</p>
 <div class="cell">
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">DV</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">hunan.localMI</span><span class="op">$</span><span class="va">GDPPC</span><span class="op">)</span>   </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">DV</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">hunan.localMI</span><span class="op">$</span><span class="va">GDPPC</span><span class="op">)</span>   </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>This is follow by finding the lag of the scaled GDPPC.</p>
 <div class="cell">
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">C_mI</span> <span class="op">&lt;-</span> <span class="fu">lag.listw</span><span class="op">(</span><span class="va">rswm_q</span>, <span class="va">DV</span><span class="op">)</span>   </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">C_mI</span> <span class="op">&lt;-</span> <span class="fu">lag.listw</span><span class="op">(</span><span class="va">rswm_q</span>, <span class="va">DV</span><span class="op">)</span>   </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>Using the Moran Scatterplot below, we filter all the area with p value &lt; 0.05 and identify significant areas. We can see that the plot below is align with our Moran I plot where there are a total of 11 significant areas, 2 areas that are outliers (LH), and 9 areas that are clusters (7 HH and 2 LL).</p>
 <div class="cell">
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">MIplot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">DV</span>,<span class="va">C_mI</span>,<span class="va">localMI</span><span class="op">[</span>,<span class="fl">5</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">MIplot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">DV</span>,<span class="va">C_mI</span>,<span class="va">localMI</span><span class="op">[</span>,<span class="fl">5</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>
 <span class="va">MIplot</span> <span class="op">&lt;-</span> <span class="va">MIplot</span> <span class="op">%&gt;%</span>
   <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span> <span class="op">(</span><span class="va">X3</span> <span class="op">&lt;</span> <span class="fl">0.05</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">MIplot</span><span class="op">$</span><span class="va">X1</span>, y <span class="op">=</span> <span class="va">MIplot</span><span class="op">$</span><span class="va">X2</span>, main <span class="op">=</span> <span class="st">"Moran Scatterplot PPOV"</span>, xlab <span class="op">=</span> <span class="st">"scaled GDDPC"</span>, ylab <span class="op">=</span> <span class="st">"Lag scaled GDPPC"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0</span>, v <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>We will now then define the quadrant based on the following criteria and place non-significant Moran (p value &lt; 0.05) in the category 0.:</p>
 <div class="cell">
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">signif</span> <span class="op">&lt;-</span> <span class="fl">0.05</span> 
+<details><summary>Show the code</summary><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">signif</span> <span class="op">&lt;-</span> <span class="fl">0.05</span> 
 <span class="va">quadrant</span><span class="op">[</span><span class="va">DV</span> <span class="op">&gt;</span><span class="fl">0</span> <span class="op">&amp;</span> <span class="va">C_mI</span><span class="op">&gt;</span><span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">4</span>      
 <span class="va">quadrant</span><span class="op">[</span><span class="va">DV</span> <span class="op">&lt;</span><span class="fl">0</span> <span class="op">&amp;</span> <span class="va">C_mI</span><span class="op">&lt;</span><span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span>      
 <span class="va">quadrant</span><span class="op">[</span><span class="va">DV</span> <span class="op">&lt;</span><span class="fl">0</span> <span class="op">&amp;</span> <span class="va">C_mI</span><span class="op">&gt;</span><span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">2</span>
 <span class="va">quadrant</span><span class="op">[</span><span class="va">DV</span> <span class="op">&gt;</span><span class="fl">0</span> <span class="op">&amp;</span> <span class="va">C_mI</span><span class="op">&lt;</span><span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">3</span>
 <span class="va">quadrant</span><span class="op">[</span><span class="va">localMI</span><span class="op">[</span>,<span class="fl">5</span><span class="op">]</span><span class="op">&gt;</span><span class="va">signif</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section><section id="plotting-lisa-map" class="level3"><h3 class="anchored" data-anchor-id="plotting-lisa-map">Plotting LISA map</h3>
 <p>Once the quadrant of each area has been decided, we will now plot the LISA map using <code>tmap</code>. We will plot both the base map with the GDDPC distribution and the LISA map to better understand the relationship.</p>
 <div class="cell">
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">tmap_mode</span><span class="op">(</span><span class="st">"plot"</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">tmap_mode</span><span class="op">(</span><span class="st">"plot"</span><span class="op">)</span>
 <span class="va">hunan.localMI</span><span class="op">$</span><span class="va">quadrant</span> <span class="op">&lt;-</span> <span class="va">quadrant</span>
 <span class="va">colors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"#ffffff"</span>, <span class="st">"#2c7bb6"</span>, <span class="st">"#abd9e9"</span>, <span class="st">"#fdae61"</span>, <span class="st">"#d7191c"</span><span class="op">)</span>
 <span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"insignificant"</span>, <span class="st">"low-low"</span>, <span class="st">"low-high"</span>, <span class="st">"high-low"</span>, <span class="st">"high-high"</span><span class="op">)</span>
@@ -780,7 +787,7 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
             main.title.fontface <span class="op">=</span> <span class="st">"bold"</span>, main.title.position <span class="op">=</span> <span class="st">"center"</span><span class="op">)</span>
 
 <span class="fu">tmap_arrange</span> <span class="op">(</span><span class="va">imap</span>,<span class="va">lisamap</span>,<span class="va">basemap</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
@@ -804,25 +811,27 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 <p>These methods were explained on the previous post and therefore will not be elaborated here.</p>
 <p>The code chunk below is to generate the fixed distance weight matrix:</p>
 <div class="cell">
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu">st_centroid</span><span class="op">(</span><span class="fu">st_geometry</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu">st_centroid</span><span class="op">(</span><span class="fu">st_geometry</span><span class="op">(</span><span class="va">hunan</span><span class="op">)</span><span class="op">)</span>
 <span class="va">k1</span> <span class="op">&lt;-</span> <span class="fu">knn2nb</span><span class="op">(</span><span class="fu">knearneigh</span><span class="op">(</span><span class="va">coords</span><span class="op">)</span><span class="op">)</span>
 <span class="va">k1dists</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html">unlist</a></span><span class="op">(</span><span class="fu">nbdists</span><span class="op">(</span><span class="va">k1</span>, <span class="va">coords</span><span class="op">)</span><span class="op">)</span>
 <span class="va">wm_d59</span> <span class="op">&lt;-</span> <span class="fu">dnearneigh</span><span class="op">(</span><span class="va">coords</span>, <span class="fl">0</span>, <span class="fl">59</span><span class="op">)</span>
 <span class="va">wm59_lw</span> <span class="op">&lt;-</span> <span class="fu">nb2listw</span><span class="op">(</span><span class="va">wm_d59</span>, style <span class="op">=</span> <span class="st">'W'</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>The output spatial weights object is called wm59_lw.</p>
 <p>The code chunk below is to generate the adaptive distance weight matrix:</p>
 <div class="cell">
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">knn</span> <span class="op">&lt;-</span> <span class="fu">knn2nb</span><span class="op">(</span><span class="fu">knearneigh</span><span class="op">(</span><span class="va">coords</span>, k<span class="op">=</span><span class="fl">8</span><span class="op">)</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">knn</span> <span class="op">&lt;-</span> <span class="fu">knn2nb</span><span class="op">(</span><span class="fu">knearneigh</span><span class="op">(</span><span class="va">coords</span>, k<span class="op">=</span><span class="fl">8</span><span class="op">)</span><span class="op">)</span>
 <span class="va">knn_lw</span> <span class="op">&lt;-</span> <span class="fu">nb2listw</span><span class="op">(</span><span class="va">knn</span>, style <span class="op">=</span> <span class="st">'B'</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section></section><section id="computing-gi-statistics" class="level2"><h2 class="anchored" data-anchor-id="computing-gi-statistics">Computing Gi statistics</h2>
 <section id="gi-statistics-using-fixed-distance" class="level3"><h3 class="anchored" data-anchor-id="gi-statistics-using-fixed-distance">Gi statistics using fixed distance</h3>
 <div class="cell">
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">fips</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb39"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">fips</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span><span class="op">)</span>
 <span class="va">gi.fixed</span> <span class="op">&lt;-</span> <span class="fu">localG</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, <span class="va">wm59_lw</span><span class="op">)</span>
 <span class="va">gi.fixed</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
+</details><div class="cell-output cell-output-stdout">
 <pre><code> [1]  0.43607584 -0.26550565 -0.07303367  0.41301703  0.37236574 -0.37751078
  [7]  2.86389882  2.79435042  5.21612540  0.22823660  0.95103535 -0.53633423
 [13]  0.17676156  1.19556402 -0.03302061  1.24516289 -0.58575676 -0.41968056
@@ -858,14 +867,15 @@ attr(,"class")
 <p>The Gi statistics is represented as a Z-score. Greater values represent a greater intensity of clustering and the direction (positive or negative) indicates high or low clusters.</p>
 <p>Next, we will join the Gi values to their corresponding hunan sf data frame by using the code chunk below.</p>
 <div class="cell">
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">hunan.gi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">hunan</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">gi.fixed</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">hunan.gi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">hunan</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">gi.fixed</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">rename</span><span class="op">(</span>gstat_fixed <span class="op">=</span> <span class="va">as.matrix.gi.fixed.</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>In fact, the code chunk above performs three tasks. First, it convert the output vector (i.e.&nbsp;gi.fixed) into r matrix object by using as.matrix(). Next, cbind() is used to join hunan@data and gi.fixed matrix to produce a new SpatialPolygonDataFrame called hunan.gi. Lastly, the field name of the gi values is renamed to gstat_fixed by using rename().</p>
 </section><section id="mapping-gi-values-with-fixed-distance-weights" class="level3"><h3 class="anchored" data-anchor-id="mapping-gi-values-with-fixed-distance-weights">Mapping Gi values with fixed distance weights</h3>
 <p>The code chunk below shows the functions used to map the Gi values derived using fixed distance weight matrix.</p>
 <div class="cell">
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">gdppc</span> <span class="op">&lt;-</span> <span class="fu">qtm</span><span class="op">(</span><span class="va">hunan</span>, <span class="st">"GDPPC"</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb42"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">gdppc</span> <span class="op">&lt;-</span> <span class="fu">qtm</span><span class="op">(</span><span class="va">hunan</span>, <span class="st">"GDPPC"</span><span class="op">)</span>
 
 <span class="va">Gimap</span> <span class="op">&lt;-</span><span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.gi</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">tm_fill</span><span class="op">(</span>col <span class="op">=</span> <span class="st">"gstat_fixed"</span>, 
@@ -875,7 +885,7 @@ attr(,"class")
   <span class="fu">tm_borders</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>
 
 <span class="fu">tmap_arrange</span><span class="op">(</span><span class="va">gdppc</span>, <span class="va">Gimap</span>, asp<span class="op">=</span><span class="fl">1</span>, ncol<span class="op">=</span><span class="fl">2</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
@@ -883,16 +893,17 @@ attr(,"class")
 </section><section id="gi-statistics-using-adaptive-distance" class="level3"><h3 class="anchored" data-anchor-id="gi-statistics-using-adaptive-distance">Gi statistics using adaptive distance</h3>
 <p>The code chunk below are used to compute the Gi values for GDPPC2012 by using an adaptive distance weight matrix (i.e knb_lw).</p>
 <div class="cell">
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">fips</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span><span class="op">)</span>
+<details><summary>Show the code</summary><div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">fips</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">County</span><span class="op">)</span>
 <span class="va">gi.adaptive</span> <span class="op">&lt;-</span> <span class="fu">localG</span><span class="op">(</span><span class="va">hunan</span><span class="op">$</span><span class="va">GDPPC</span>, <span class="va">knn_lw</span><span class="op">)</span>
 <span class="va">hunan.gi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">hunan</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">gi.adaptive</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>
   <span class="fu">rename</span><span class="op">(</span>gstat_adaptive <span class="op">=</span> <span class="va">as.matrix.gi.adaptive.</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section><section id="mapping-gi-values-with-adaptive-distance-weights" class="level3"><h3 class="anchored" data-anchor-id="mapping-gi-values-with-adaptive-distance-weights">Mapping Gi values with adaptive distance weights</h3>
 <p>It is time for us to visualise the locations of hot spot and cold spot areas. The choropleth mapping functions of tmap package will be used to map the Gi values.</p>
 <p>The code chunk below shows the functions used to map the Gi values derived using fixed distance weight matrix.</p>
 <div class="cell">
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">Gimap</span> <span class="op">&lt;-</span> <span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.gi</span><span class="op">)</span> <span class="op">+</span> 
+<details><summary>Show the code</summary><div class="sourceCode" id="cb44"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">Gimap</span> <span class="op">&lt;-</span> <span class="fu">tm_shape</span><span class="op">(</span><span class="va">hunan.gi</span><span class="op">)</span> <span class="op">+</span> 
   <span class="fu">tm_fill</span><span class="op">(</span>col <span class="op">=</span> <span class="st">"gstat_adaptive"</span>, 
           style <span class="op">=</span> <span class="st">"pretty"</span>, 
           palette<span class="op">=</span><span class="st">"-RdBu"</span>, 
@@ -903,7 +914,7 @@ attr(,"class")
              <span class="va">Gimap</span>, 
              asp<span class="op">=</span><span class="fl">1</span>, 
              ncol<span class="op">=</span><span class="fl">2</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
+</details><div class="cell-output-display">
 <p><img src="index_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
