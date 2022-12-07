@@ -4,6 +4,7 @@
     "items": [
       "/posts/Me/RFM/index.html",
       "/posts/Me/SIS Representation/index.html",
+      "/posts/Geo/geospatial_nigeriasegmentation/index.html",
       "/posts/Geo/Geographic_Segmentation/index.html",
       "/posts/Geo/Geospatial_Exercise/index.html",
       "/posts/Geo/Geospatial_Autocorrelation/index.html",
@@ -15,6 +16,7 @@
   {
     "listing": "/posts/geo.html",
     "items": [
+      "/posts/Geo/geospatial_nigeriasegmentation/index.html",
       "/posts/Geo/Geographic_Segmentation/index.html",
       "/posts/Geo/Geospatial_Exercise/index.html",
       "/posts/Geo/Geospatial_Autocorrelation/index.html",
@@ -26,6 +28,7 @@
   {
     "listing": "/posts/index.html",
     "items": [
+      "/posts/Geo/geospatial_nigeriasegmentation/index.html",
       "/posts/Geo/Geographic_Segmentation/index.html",
       "/posts/Geo/Geospatial_Exercise/index.html",
       "/posts/Geo/Geospatial_Autocorrelation/index.html",

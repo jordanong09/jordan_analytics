@@ -835,7 +835,6 @@ nigeria_localMI_adp$quadrantfun <- quadrant
 h <- nigeria_localMI_dw[nigeria_localMI_dw$quadrant != 0,]
 ```
 
-
 #### Plotting LISA map
 
 Once the quadrant of each area has been decided, we will now plot the LISA map using `tmap`.
@@ -955,7 +954,7 @@ nigeria.gi <- cbind(nigeria.gi, gi.fixed_fun) %>%
 
 ### Visualising Z score for Gertis-Ord Gi
 
-Once we have attained the Z score for each area, we will have to filter the area with z score less than the given critical value of [**3.886**](https://r-spatial.github.io/spdep/reference/localG.html). Since we are doing a two-tailed test, we will halve the critical value and check for **Z score < - CV/2** and **Z score > CV/2**. We will then visualise the variable using `tmap`.
+Once we have attained the Z score for each area, we will have to filter the area with z score less than the given critical value of [**3.886**](https://r-spatial.github.io/spdep/reference/localG.html). Since we are doing a two-tailed test, we will halve the critical value and check for **Z score \< - CV/2** and **Z score \> CV/2**. We will then visualise the variable using `tmap`.
 
 The code chunk below will generate the map:
 

@@ -1,0 +1,1195 @@
+---
+title: " Regionalisation of Multivariate Water Point Attributes with Non-spatially Constrained and Spatially Constrained Clustering Methods"
+subtitle: A regionalization is a specific type of clustering whose goal is to combine data that are comparable in both their statistical characteristics and their geographic locations. Regionalization uses the same logic as conventional clustering approaches in this regard, but it additionally imposes a number of geographical restrictions. These restrictions frequently have to do with connectivity. It is not always necessary for connectedness to be true for all regions, and in some situations it makes sense to loosen connectivity or to impose alternative kinds of geographic restrictions.
+author: "Ong Zhi Rong Jordan"
+date: 2022-12-07
+categories:
+  - geospatial
+  - sf
+  - spdep
+  - tmap
+  - clustering
+image: "nigeria.png"
+toc: true
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Overview
+
+### Introduction
+
+A regionalization is a specific type of clustering whose goal is to combine data that are comparable in both their statistical characteristics and their geographic locations. Regionalization uses the same logic as conventional clustering approaches in this regard, but it additionally imposes a number of geographical restrictions. These restrictions frequently have to do with connectivity. It is not always necessary for connectedness to be true for all regions, and in some situations it makes sense to loosen connectivity or to impose alternative kinds of geographic restrictions.
+
+For this post, we will examine **Traditional Clustering Algorithm** and **Spatially Constrained Clustering Algorithm** to identify its utility and limitations.
+
+### Libraries
+
+For this study, we will use the following packages from CRAN.
+
+For **Geographical Analysis** and Visualisation the packages used are: 
+
+-   [`sf`](https://cloud.r-project.org/web/packages/sf/index.html) - Support for simple features, a standardized way to encode spatial vector data. Binds to 'GDAL' for reading and writing data, to 'GEOS' for geometrical operations, and to 'PROJ' for projection conversions and datum transformations. Uses by default the 's2' package for spherical geometry operations on ellipsoidal (long/lat) coordinates.
+
+-   [`tmap`](https://cran.r-project.org/web/packages/tmap/index.html) - Thematic maps are geographical maps in which spatial data distributions are visualized. This package offers a flexible, layer-based, and easy to use approach to create thematic maps, such as choropleths and bubble maps.
+
+-   [`spdep`](https://cran.r-project.org/web/packages/spdep/index.html) - A collection of functions to create spatial weights matrix objects from polygon 'contiguities', from point patterns by distance and tessellations, for summarizing these objects, and for permitting their use in spatial data analysis, including regional aggregation by minimum spanning tree; a collection of tests for spatial 'autocorrelation'.
+
+-   [`ClustGeo`](https://cran.r-project.org/web/packages/ClustGeo/vignettes/intro_ClustGeo.html) - Ward-like hierarchical clustering algorithm including spatial/geographical constraints.
+
+-   [`rgdal`](https://cran.r-project.org/web/packages/rgdal/index.html) - Provides bindings to the 'Geospatial' Data Abstraction Library ('GDAL') and access to projection/transformation operations from the 'PROJ' library.
+
+-   [`rgeoda`](https://geodacenter.github.io/rgeoda/) - For spatial data analysis based on libgeoda and GeoDa.
+
+For **Traditional Clustering Algorithm** the packages used are: 
+
+-   [`cluster`](https://cran.r-project.org/web/packages/rgdal/index.html) - Provides bindings to the 'Geospatial' Data Abstraction Library ('GDAL') and access to projection/transformation operations from the 'PROJ' library.
+
+-   [`factoextra`](https://cran.r-project.org/web/packages/factoextra/index.html) - Extract and visualize the output of multivariate data analyses.
+
+-   [`NbClust`](https://cran.r-project.org/web/packages/NbClust/NbClust.pdf) - Determining the Best Number of Clusters in a Data Set.
+
+For **Data Wrangling and Simple Visualisation** the packages used are: 
+
+-   [`patchwork`](https://patchwork.data-imaginist.com/) - Combine separate ggplots into the same graphic.
+
+-   [`tidyverse`](https://www.tidyverse.org/packages/) - Loading the core tidyverse packages which will be used for data wrangling and visualisation.
+
+-   [`heatmaply`](https://www.rdocumentation.org/packages/heatmaply/versions/1.4.0/topics/heatmaply) - Cluster heatmap based on plotly.
+
+-   [`corrplot`](https://www.rdocumentation.org/packages/corrplot/versions/0.92/topics/corrplot) - A graphical display of a correlation matrix, confidence interval.
+
+-   [`psych`](https://cran.r-project.org/web/packages/psych/index.html) - A general purpose toolbox for personality, psychometric theory and experimental psychology.
+
+-   [`reshape2`](https://cran.r-project.org/web/packages/reshape2/index.html) - Flexibly restructure and aggregate data using just two functions: melt and 'dcast'.
+
+-   [`hrbrthemes`](https://patchwork.data-imaginist.com/) - Provides typography-centric themes and theme components for ggplot2.
+
+-   [`ggstatsplot`](https://patchwork.data-imaginist.com/) - An extension of {ggplot2} package for creating graphics with details from statistical tests included in the information-rich plots themselves
+
+```{r}
+pacman::p_load(rgdal, spdep, tmap, sf, ClustGeo,rgeoda, 
+               cluster, factoextra, NbClust,
+               heatmaply, corrplot, psych, tidyverse,reshape2,hrbrthemes, GGally, ggstatsplot, patchwork)
+```
+
+## Data Preparation
+
+Two dataset will be used for this study:
+
+-   Nigeria.shp: A shapefile of Nigeria from [`Humanitarian Data Exchange Portal`](https://data.humdata.org/dataset/geoboundaries-admin-boundaries-for-nigeria) that consist of all the Level-2 Administrative Boundary (also known as Local Government Area)
+-   NigeriaAttribute.csv: A csv file containing multiple water point attributes of each Level-2 Administrative Nigeria Boundary from the [`WPdx Global Data Repositories`](https://www.waterpointdata.org/access-data/)
+
+### Importing of data
+
+We will use the *st_read* to import the shape file and *read_csv* to import the aspatial data into the R environment.
+
+```{r, eval = FALSE}
+nigeria <- st_read(dsn = "data", 
+                 layer = "geoBoundaries-NGA-ADM2")
+
+nigeria_attribute <- read_csv("data/nigeriaattribute.csv")
+
+nigeria <- nigeria %>%
+  select(shapeName) %>%
+  st_transform(crs = 26391)
+```
+
+```{r, eval = FALSE, echo = FALSE}
+saveRDS(nigeria, "nigeria.rds")
+saveRDS(nigeria_attribute, "nigeriaattribute.rds")
+```
+
+```{r, echo = FALSE}
+nigeria <- readRDS("data/nigeria.rds")
+nigeria_attribute <- readRDS("data/nigeriaattribute.rds")
+```
+
+### Data Wrangling
+
+The practice of correcting or deleting inaccurate, damaged, improperly formatted, duplicate, or incomplete data from a dataset is known as **data wrangling**. There are numerous ways for data to be duplicated or incorrectly categorized when merging multiple data sources. We willl now proceed to ensure our data is cleaned before conducting our analysis.
+
+#### Checking of duplicated area name
+
+Firstly, we will order our dataframe by alphabetical order based on the shapeName. We will then use the `duplicated` function to retrieve all the shapeName that has duplicates and store it in a list. From the result below, we identified **12** shapeNames that are duplicates.
+
+```{r}
+nigeria <- (nigeria[order(nigeria$shapeName), ])
+
+nigeria<- nigeria %>%
+  mutate(shapeName = tolower(shapeName))
+
+duplicate_area <- nigeria$shapeName[ nigeria$shapeName %in% nigeria$shapeName[duplicated(nigeria$shapeName)] ]
+
+duplicate_area
+```
+
+Next, we will leverage on the interactive viewer of `tmap` to check the location of each area. Through the use of Google, we are able to retrieve the actual name and state of the areas. The table below shows the index and the actual name of the area.
+
+| Index | Actual Area Name |
+|-------|------------------|
+| 94    | Bassa (Kogi)     |
+| 95    | Bassa (Plateau)  |
+| 304   | Ifelodun (Kwara) |
+| 305   | Ifelodun (Osun)  |
+| 355   | Irepodun (Kwara) |
+| 356   | Irepodun (Osun)  |
+| 518   | Nassarawa        |
+| 546   | Obi (Benue)      |
+| 547   | Obi(Nasarawa)    |
+| 693   | Surulere (lagos) |
+| 694   | Surulere (Oyo)   |
+
+```{r}
+tmap_mode("view")
+
+tm_shape(nigeria[nigeria$shapeName %in% duplicate_area,]) +
+  tm_polygons()
+
+tmap_mode("plot")
+```
+
+We will now access the individual index of the `nigeria` data frame and change the value. Lastly, we use the `length()` function to ensure there is no more duplicated shapeName.
+
+```{r}
+nigeria$shapeName[c(94,95,304,305,355,356,519,546,547,693,694)] <- c("bassa kogi","bassa plateau",
+                                                                               "ifelodun kwara","ifelodun osun",
+                                                                               "irepodun kwara","irepodun osun",
+                                                                               "nassarawa","obi benue","obi nasarawa",
+                                                                               "surulere lagos","surulere oyo")
+
+length((nigeria$shapeName[ nigeria$shapeName %in% nigeria$shapeName[duplicated(nigeria$shapeName)] ]))
+```
+
+#### Projection of sf dataframe
+
+Since our aspatial data was imported to a tibble dataframe, we will need to convert it to an `sf` object. First, we rename the columns for ease of representation using the `rename()` function from `dyplr`. We then only retain the columns required for analysis such as the name of the *latitude*, *longitude*, *status*, *water_tech_category*, *usage_capacity*, *is_urban* and *water_point_population*. 
+
+We realised there were **NA** values within the multiple columns, so we will replace the NA values with `Unknown` and `0` using the `mutate()` function.
+
+We will then use the [`st_as_sf()`](https://www.rdocumentation.org/packages/sf/versions/1.0-9/topics/st_as_sf) function to convert the dataframe to an `sf` object. We will have to input the column that specify the longitude and latitude, and lastly, the CRS projection of the coordinates.
+
+```{r}
+nigeriaT <- nigeria_attribute  %>%
+  rename ("status" = "#status_clean",
+          "lat" = "#lat_deg",
+          "long" = "#lon_deg",
+          "water_tech" = "#water_tech_category") %>%
+  select (status,lat,long,water_tech,usage_capacity,is_urban,water_point_population) %>%
+  mutate(status = replace_na(status, "Unknown")) %>%
+  mutate (water_tech = replace_na(water_tech, "Unknown")) %>%
+  mutate(water_point_population = replace_na(water_point_population,0))
+
+nigeriaT_sf <- st_as_sf(nigeriaT, coords = c("long", "lat"),  crs = 4326)
+```
+
+We will now transform the coordinates from 4326 to 26391 projection using the `st_transform()` function.
+
+```{r}
+nigeriaT_sf <- st_transform(nigeriaT_sf, crs = 26391)
+
+st_crs (nigeria)
+st_crs (nigeriaT_sf)
+```
+
+Using the `unique()` function, we can identify how many variables are stored within the columns.
+
+```{r}
+unique (nigeriaT_sf$usage_capacity)
+unique (nigeriaT_sf$water_tech)
+unique (nigeriaT_sf$status)
+```
+
+We will also use the `st_join()` function from the **sf** package to retrieve the *shapeName* from the *polygon* geometry based on the *point* geometry from the attribute file.
+
+```{r}
+nigeriaT_sf <- st_join(nigeriaT_sf,nigeria)
+```
+
+#### Visualising of distribution using ggplot
+
+We will use the `ggplot` function to visualise the distribution of the different columns. To sort the distribution by descending order `fct_infreq` will be use.
+
+##### Distribution of status
+
+```{r}
+ggplot(data= nigeriaT_sf, 
+       aes(x= fct_infreq(status))) +
+  geom_bar(aes(fill = status), show.legend = FALSE) +
+  geom_text(stat = 'count',
+           aes(label= paste0(stat(count), ', ', 
+                             round(stat(count)/sum(stat(count))*100, 
+                             2), '%')), vjust= -0.5, size= 2.5) +
+  labs(y= 'No. of\nOccurence', x= 'Status',
+       title = "Distribution of Water Tap Status") +
+  theme(axis.title.y= element_text(angle=0), axis.ticks.x= element_blank(),
+        panel.background= element_blank(), axis.line= element_line(color= 'grey'),
+        axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+##### Distribution of Water Technology
+
+```{r}
+ggplot(data= nigeriaT_sf, 
+       aes(x= fct_infreq(water_tech))) +
+  geom_bar(aes(fill = water_tech), show.legend = FALSE) +
+  geom_text(stat = 'count',
+           aes(label= paste0(stat(count), ', ', 
+                             round(stat(count)/sum(stat(count))*100, 
+                             2), '%')), vjust= -0.5, size= 2.5) +
+  labs(y= 'No. of\nOccurence', x= 'Tap Technology',
+       title = "Distribution of Water Tap Technology") +
+  theme(axis.title.y= element_text(angle=0), axis.ticks.x= element_blank(),
+        panel.background= element_blank(), axis.line= element_line(color= 'grey'),
+        axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+##### Distribution of Usage_Capacity
+
+Since usage_capacity is in `numeric`, we will use the *as.character()* function to convert it into character class before plotting their distribution.
+
+```{r}
+ggplot(data= nigeriaT_sf, 
+       aes(x= fct_infreq(as.character(usage_capacity)))) +
+  geom_bar(aes(fill = as.character(usage_capacity)), show.legend = FALSE) +
+  geom_text(stat = 'count',
+           aes(label= paste0(stat(count), ', ', 
+                             round(stat(count)/sum(stat(count))*100, 
+                             2), '%')), vjust= -0.5, size= 2.5) +
+  labs(y= 'No. of\nOccurence', x= 'Tap Technology',
+       title = "Distribution of Water Tap Technology") +
+  theme(axis.title.y= element_text(angle=0), axis.ticks.x= element_blank(),
+        panel.background= element_blank(), axis.line= element_line(color= 'grey'),
+        axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+##### Distribution of Rural Water Point
+
+```{r}
+ggplot(data= nigeriaT_sf, 
+       aes(x= fct_infreq(as.character(is_urban)))) +
+  geom_bar(aes(fill = as.character(is_urban)), show.legend = FALSE) +
+  geom_text(stat = 'count',
+           aes(label= paste0(stat(count), ', ', 
+                             round(stat(count)/sum(stat(count))*100, 
+                             2), '%')), vjust= -0.5, size= 2.5) +
+  labs(y= 'No. of\nOccurence', x= 'Urban Water Point?',
+       title = "Distribution of Rural Water Point") +
+  theme(axis.title.y= element_text(angle=0), axis.ticks.x= element_blank(),
+        panel.background= element_blank(), axis.line= element_line(color= 'grey'),
+        axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+#### Extracting Status of Water Point
+
+Since this analysis is on the functionality of the water taps, we have to extract the number of functional and non-functional water taps from the `nigeriaT_sf` dataframe. The `status` column reveal the status of the water tap. We will now see what values are recorded by using the `unique()` function. From the result below, we can identify mainly four categories of statuses; *Functional*, *Non-Functional*, *Abandoned*, *Unknown*.
+
+Note: **For this analysis, abandoned water taps will be analysed under non-functional.**
+
+From the result below, we can identify a pattern to classify the status based on our criteria. By extracting the first word of the sentence before the punctuation, we will be able to extract the word; *Unknown*, *Abandoned*, *Functional* and *Non*. This will assist us in grouping these status.
+
+```{r}
+unique(nigeriaT_sf$status)
+```
+
+To replace the original values, we will use the `gsub()` function. A regular expression **"(\[A-Za-z\]+).\*"** is used to extract all letters and **\\\\1** is used to back reference the first capturing group. The result below shows the unique values left within the column.
+
+```{r}
+nigeriaT_sf$status <- gsub("([A-Za-z]+).*", "\\1", nigeriaT_sf$status)
+unique(nigeriaT_sf$status)
+```
+
+#### Computing Ratio of Functional and Non Functional Water Point
+
+Instead of creating another data frame to store the new values, we will leverage on the filter function by using the single square bracket "\[\]" operator. The coordinates beings with a row position and that will be used for our filtering condition. [*R Dataframe*](http://www.r-tutor.com/r-introduction/data-frame). Since our water taps are `point` data, we will use [`st_intersects()`](https://cran.r-project.org/web/packages/sf/vignettes/sf3.html) to retrieve every geometry point that intersect with the polygon of the Nigeria ADM area, and subsequently use the function `lengths()` to retrieve the number of points that intersects with the polygon.
+
+```{r}
+nigeria$pct_functional <- (lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Functional",]))/lengths(st_intersects(nigeria, nigeriaT_sf)))
+nigeria$pct_nonfunctional <- (lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Non",])) + lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Abandoned",])))/(lengths(st_intersects(nigeria, nigeriaT_sf)))
+
+nigeria$functional <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Functional",]))
+nigeria$nonfunctional <- lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Non",])) + lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$status == "Abandoned",]))
+nigeria$wp_total <- lengths(st_intersects(nigeria,nigeriaT_sf))
+```
+
+#### Computing Ratio of the Different Water Tap Technology
+
+Similar to the way we compute the ratio of `functional` and `non-functional` water point, we will extract the percentage of the different water technology within each region. We will not compute the percentage of *Rope and Bucket* since there is only **1** observation and **Unknown** pump technology.
+
+```{r}
+nigeria$pct_mechpump <- (lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$water_tech == "Mechanized Pump",])))/(lengths(st_intersects(nigeria, nigeriaT_sf)))
+nigeria$pct_handpump <- (lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$water_tech == "Hand Pump",]))/lengths(st_intersects(nigeria, nigeriaT_sf)))
+```
+
+#### Computing Ratio of the Water Point Utilisation Capacity
+
+From the earlier result, we know that there is only 4 unique variables (50, 250, 300 and 1000). But these variables are currently saved as numeric object. Since we want to classify them as a unique identifier rather than a continuous variable, we will convert them to characters using the `as.character()` function. Lastly, from the distribution, `50` does not seem to have too many observations and therefore will be excluded from the analysis. `250` and `300` will also be combined to form an object of `<1000` utilisation.
+
+```{r}
+nigeriaT_sf$usage_capacity <- as.character(nigeriaT_sf$usage_capacity )
+nigeria$pct_1000M <- (lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$usage_capacity == "1000",]))/lengths(st_intersects(nigeria, nigeriaT_sf)))
+nigeria$pct_1000L <- (lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$usage_capacity == "300",])) + lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$usage_capacity == "250",])))/(lengths(st_intersects(nigeria, nigeriaT_sf))) 
+```
+
+#### Computing Ratio of Rural Water Point
+
+To extract the ratio of *Rural Water Point*, we will retrieve the number of water point that `is_urban == FALSE` and divide by the total number of water point in that region.
+
+```{r}
+nigeria$pct_rural<- (lengths(st_intersects(nigeria, nigeriaT_sf[nigeriaT_sf$is_urban == FALSE,]))/lengths(st_intersects(nigeria, nigeriaT_sf)))
+```
+
+#### Computing Average Percentage of Overused water points
+
+Overused water point is calculated using the `usage_capacity` and the `water_point_population`. We will first compute the pecentage overused for each water point, subsequently, using the `group_by` and `summarise` function to retrieve the `mean` of the overuse percentage by region.
+
+```{r}
+overuse <- nigeriaT_sf %>%
+  mutate (pct_overuse = (water_point_population/as.numeric(usage_capacity))*100) %>%
+  group_by(shapeName) %>%
+  summarise (avg_pct_overuse = mean(pct_overuse))  %>%
+  st_drop_geometry() %>%
+  ungroup()
+```
+
+Next, we will use the `left_join()` function to join the `nigeria` dataframe with the `overused` data. For areas without any water taps, **my assumption** is that these areas do not need water taps for many possible reasons (lack of habitat, urbanised areas, etc), and therefore will be excluded from the analysis. I use the `filter()` function to remove areas without any water taps and `mutate()` function to create *two* new columns that shows the percentage of functional and non-functional water points over the total water point in the area. (Including `unknown` water point status)
+
+```{r}
+nigeria <- nigeria %>%
+  left_join(overuse,by="shapeName") %>%
+  filter (wp_total != 0) %>%
+  select(-wp_total)
+```
+
+We will use the *summary* function to retrieve statistical information of each column.
+
+```{r}
+summary(nigeria)
+```
+
+#### Visualising Column Distribution
+
+To visualise all the distribution easily, we will first use the `melt()` function from `reshape2` to convert the data table to **long** format. Next, we will visualise the distribution using a density plot and `facet_wrap` by each variable. To remove the scientific notation from the axes, we will adjust the scale by inputting `labels = scales::comma`.
+
+```{r}
+nigeria_density_plot <- nigeria %>%
+  st_drop_geometry() %>%
+  melt()
+```
+
+```{r,fig.height=10}
+ggplot(data = nigeria_density_plot, aes(x = value)) + 
+  stat_density(fill = "steelblue", alpha = 0.6) + 
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(labels = scales::comma) +
+  theme_classic() +
+  facet_wrap(~variable, scales = "free", ncol = 3)
+```
+
+From the distribution, we can identify the variables does not conform to Gaussian distribution and we should perform normalization or standardisation before proceeding with our analysis.
+
+#### Variables Collinearity
+
+When clustering variables are collinear, certain variables are given more weight than others. Two variables that are highly correlated indicate the same notion. However, because that notion is now represented twice in the data, it receives double the weight of all other variables. The ultimate solution is likely to be tilted toward that notion, which might be a problem if not foreseen. Therefore there is a need to check for **Collinearity** before conducting cluster analysis. We will use the `cor()` and `corrplot.mixed` function from the **corrplot** package to visualise and identify highly correlated variables.
+
+```{r, fig.width=7, fig.height=5}
+nigeria$functional <- as.numeric(nigeria$functional)
+nigeria$nonfunctional <- as.numeric(nigeria$nonfunctional)
+
+nigeria_var <- nigeria %>%
+  st_drop_geometry()
+
+cluster_vars.cor = cor(nigeria_var[,2:11])
+corrplot.mixed(cluster_vars.cor,
+         lower = "ellipse", 
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black")
+
+```
+
+From the result above, we can identify **4** variables that are highly correlated. We will now choose to only retain **1** (pct_mechpump) for the analysis. We will create another dataframe to store all the variables required for the subsequent cluster analysis.
+
+```{r}
+nigeria <- nigeria %>%
+  select(-pct_handpump, -pct_1000M, -pct_1000L)
+
+nigeria_cluster_var <- nigeria %>%
+  st_drop_geometry()
+```
+
+Since the dataframe should only consist of variables used for the clustering, the `shapeName` should now be an identifier for each row. We will use the `row.names()` function to set the `id` for each row using their respective `shapeName` and remove the `shapeName` column from the dataframe.
+
+```{r}
+row.names(nigeria_cluster_var) <- nigeria_cluster_var$shapeName
+nigeria_cluster_var <- select(nigeria_cluster_var, c(2:8))
+```
+
+### Data Normalization
+
+Larger variances between data points of input variables increases the model's results' uncertainty.
+
+Machine learning models assign weights to input variables based on data points and output inferences. If the difference between the data points is large, the model will need to give the points more weight, and the model with a large weight value is generally unstable in the end. This implies that the model may produce bad results or perform poorly during training. Therefore, we will have to ensure our variables are *scaled* if we were to perform any distance-based algorithm such as K-means Clustering. To scale all the columns, we will use `mutate_at()` to select all the columns, and perform scaling through the `scale()` function.
+
+```{r}
+nigeria_cluster_var <- nigeria_cluster_var %>% 
+  mutate_at(c(1:7), funs(c(scale(.))))
+```
+
+## Conventional Clustering
+
+### Hierarchical Clustering
+
+Hierarchical clustering, also known as hierarchical cluster analysis or HCA, is another unsupervised machine learning approach used to sort unlabeled datasets into clusters.
+
+The dendrogram is a tree-shaped structure that we construct in this approach to develop the hierarchy of clusters.
+
+The hierarchical clustering technique has two approaches:
+
+-   **Agglomerative**: Agglomerative is a bottom-up approach, in which the algorithm starts with taking all data points as single clusters and merging them until one cluster is left.
+-   **Divisive**: Divisive is a top-down approach, in which the algorithm start with all the data points as one cluster, and slowly seperate them until all data points becomes a single clusters.
+
+#### Computing of Distance Matrix
+
+We will now create the distance matrix using the `dist()` function. Since we have multiple dimensions to the data, we will use the [`Manhattan`](https://bib.dbvis.de/uploadedFiles/155.pdf) distance to compute the distance matrix instead of the standard `Eucluidean` distance.
+
+```{r}
+proxmat <- dist(nigeria_cluster_var, method = 'manhattan')
+```
+
+#### Computing Optimal Hierarchical Clustering Clustering Values
+
+We will only use the `Gap Statistic Method` to determine the optimal cluster. The `clusGap()` function from the **cluster** package will be used to calculate the goodness of the clustering measure.
+
+```{r}
+gap_stat <- clusGap(nigeria_cluster_var, 
+                    FUN = hcut, 
+                    nstart = 25, 
+                    K.max = 10, 
+                    B = 50)
+# Print the result
+print(gap_stat, method = "firstmax")
+```
+
+We will use the `fviz_gap_stat()` function to visualise the gap statistics results.
+
+```{r}
+fviz_gap_stat(gap_stat)
+```
+
+From the above plot, we can conclude that the optimal number of cluster for the Hierarchical Clustering Algorithm is **4**.
+
+#### Selecting of Hierarchical Clustering Algorithm
+
+To compute the Hierarchical Cluster, we will use the `hclust()` function from R stats. The hclust() uses the Agglomerative approach to compute the cluster. There are 8 different clustering algorithm supported by the function: ward.D, ward.D2, single, complete, average(UPGMA), mcquitty(WPGMA), median(WPGMC) and centroid(UPGMC). To select the optimal algorithm, we will use the `agnes()` function from the **cluster** package.
+
+```{r}
+m <- c( "average", "single", "complete", "ward")
+names(m) <- m
+
+ac <- function(x) {
+  agnes(nigeria_cluster_var, method = x)$ac
+}
+
+map_dbl(m, ac)
+```
+
+From the above result, the *ward* algorithm will produce the optimal cluster coefficient and therefore will be use for this analysis.
+
+#### Computing of Hierarchical Clustering and Dendrogram Visualisation
+
+Using the `hclust()` function, we will compute the Hierarchical Cluster and visualise the clusters on a dendrogram using the `rect.hclust(`) function. Based on the plot below, we can clearly identify 4 cluster but is unable to understand which area belongs to which cluster. We will subsequently use another visualisation method to visualise the output.
+
+```{r}
+set.seed(1234)
+h_clust_ward <- hclust(proxmat, method = 'ward.D')
+plot(h_clust_ward, cex = 0.5)
+rect.hclust(h_clust_ward, 
+            k = 4, 
+            border = 2:5)
+```
+
+#### Summary of Hierarchical Cluster
+
+We can conduct a quick summary of the cluster by binding the clusters to the `nigeria` dataframe using `cbind()`. To extract the `4 cluster`, the `cutree()` function is used.
+
+```{r}
+groups <- as.factor(cutree(h_clust_ward, k=4))
+nigeria <- cbind(nigeria, as.matrix(groups)) %>%
+  rename(`HR_Cluster` = `as.matrix.groups.`)
+```
+
+The code chunk below generates a quick summary of the average values of all the variables within the cluster.
+
+```{r}
+nigeria %>%
+  group_by(HR_Cluster) %>%
+  summarise_all("mean")
+```
+
+#### Visualisation of Hierarchical Cluster using tmap
+
+Using the `qtm()` function, we plot the Nigeria map based on their designated cluster.
+
+```{r}
+qtm(nigeria, "HR_Cluster")
+```
+
+#### Visualisation of Hierarchical Cluster using Parallel Coordinates Plot
+
+To better understand the distribution of values based on the different cluster, we will use the `ggparcoord()` function from the **GGally** package. The `ggparcoord()` visualisation provide different scaling methods to the variables such as: *Min-Max(uniminmax)*, *Z-Score (std)* and many others. For our visualisation, we will be using the **Z-score Normalization** to visualise the distribution of data. The `facet_grid()` function is used to seperate the different clusters by their grids.
+
+```{r,fig.height = 5, fig.width = 14}
+#| column: body-outset
+
+ggparcoord(nigeria,
+    columns = 2:8,
+    showPoints = TRUE, 
+    title = "Parallel Coordinate Plot for the Nigeria Attributes using Hierarchical Clustering",
+    groupColumn = "HR_Cluster",
+    alphaLines = 0.3,
+    scale="std",
+    boxplot = TRUE
+    ) + 
+  scale_color_viridis(discrete=TRUE) +
+  theme_ipsum()+
+  theme(
+    plot.title = element_text(size=10),
+    axis.text.x = element_text(size = 6)
+  ) +
+  facet_grid(~HR_Cluster)
+```
+
+#### Interpretation of Hierarchical Clustering Results
+
+Based on the parallel coordinates plot, we can infer that `Cluster 2` should be an area of concern with a higher average of `pct_nonfunctional` compare to `pct_functional`. The next area of concern could be `Cluster 1` with also a higher average of `pct_nonfunctional` than `pct_functional` complemented with a high average of `pct_overuse`. We will substantiate all the claims in the subsequent section.
+
+### K-Means Clustering
+
+K-means clustering is a straightforward unsupervised learning approach for grouping issues. It employs a straightforward approach for categorizing a given data set into a specific number of clusters denoted by the letter "k." The clusters are then positioned as points, and all observations or data points are associated with the nearest cluster, computed, modified, and the process is repeated until the desired result is obtained. K-Means clustering is also often known as a Partition Clustering Method. We will now analyse the difference between K-means and Hierarchical Clustering.
+
+#### Computing Optimal K-Means Clustering Values
+
+Similar to Hierarchical Clustering, we will use the `clusGap()` function to obtain the optimal cluster value.
+
+```{r}
+gap_stat <- clusGap(nigeria_cluster_var, FUN = kmeans, nstart = 25,
+                    K.max = 12, B = 50)
+
+fviz_gap_stat(gap_stat)
+```
+
+From the above plot, we can conclude that the optimal number of cluster for the K-Means Clustering Algorithm is **4**.
+
+#### Computing of K-means Clustering
+
+Using the `kmeans()` function, we will compute the k-means results.
+
+```{r}
+set.seed(1234)
+final_kmeans <- kmeans(nigeria_cluster_var, 4, nstart = 25)
+```
+
+#### Summary of K-means Cluster
+
+We will then have a quick summary on the cluster by first binding the new cluster column to the `Nigeria` data frame, then the `summarise_all` function to display the average of each variables based on their cluster.
+
+```{r}
+nigeria <- nigeria %>%
+  mutate(KM_Cluster = as.factor(final_kmeans$cluster))
+```
+
+The code chunk below generates a quick summary of the average values of all the variables within the cluster.
+
+```{r}
+nigeria %>%
+  group_by(KM_Cluster) %>%
+  summarise_all("mean")
+```
+
+#### Visualisation of K-means Cluster using tmap
+
+Using the `qtm()` function, we plot the Nigeria map based on their designated K-means cluster.
+
+```{r}
+qtm(nigeria,fill = "KM_Cluster")
+```
+
+#### Visualisation of K-means Cluster using Parallel Coordinates Plot
+
+We will now visualise the variables using the `ggparcoord()` function.
+
+```{r,fig.height = 5, fig.width = 14}
+#| column: body-outset
+ggparcoord(nigeria,
+    columns = 2:8,
+    showPoints = TRUE, 
+    title = "Parallel Coordinate Plot for the Nigeria Attributes",
+    groupColumn = "KM_Cluster",
+    alphaLines = 0.3,
+    scale="std",
+    boxplot = TRUE
+    ) + 
+  scale_color_viridis(discrete=TRUE) +
+  theme_ipsum()+
+  theme(
+    plot.title = element_text(size=10),
+    axis.text.x = element_text(size = 6)
+  ) +
+  facet_grid(~KM_Cluster)
+```
+
+#### Interpretation of K-Means Clustering Results
+
+From the above results, we can **infer** that **Cluster 3** and **Cluster 4** are areas of concerns with a higher average of *pct_nonfunctional* compared to *pct_functional*. The most significant difference is that despite having a higher average of *pct_overuse*, **Cluster 1** have a higher **pct_functional** compared to **pct_nonfunctional**.
+
+### Partitioning Around Medodoids (PAM) Clustering
+
+In order to construct clusters, the PAM algorithm searches a data set for k representative objects (k medoids) and assigns each object to the closest medoid. Its goal is to minimize the sum of dissimilarities between objects in a cluster and the cluster's center (medoid). It is regarded to be a more robust variant of k-means since it is less sensitive to outliers.
+
+#### Computing Optimal PAM Clustering Clustering Values
+
+Similar to K-means Clustering, we will use the `clusGap()` function to obtain the optimal cluster value.
+
+::: callout-note
+PAM Clustering do not require the nstart component within the clusGap() function.
+:::
+
+```{r}
+gap_stat <- clusGap(nigeria_cluster_var, FUN = pam,
+                    K.max = 12, B = 50)
+
+fviz_gap_stat(gap_stat)
+```
+
+From the above plot, we can conclude that the optimal number of cluster for the PAM Clustering Algorithm is **4**.
+
+#### Computing of PAM Clustering
+
+Using the `pam()` function, we will compute the PAM results. Since we have identified earlier to use the `manhattan` distance instead of `euclidean` distance, the `pam()` function require an input on the distance metric using the `metric` variable. We will also use the `manhattan` distance metric to compute our PAM cluster.
+
+```{r}
+set.seed(1234)
+final_pam <- pam(nigeria_cluster_var, 4, metric = "manhattan")
+```
+
+#### Summary of PAM Cluster
+
+We will then have a quick summary on the cluster by first binding the new cluster column to the `Nigeria` data frame, then the `summarise_all` function to display the average of each variables based on their cluster.
+
+```{r}
+nigeria <- nigeria %>%
+  mutate(PAM_Cluster = as.factor(final_pam$cluster))
+
+nigeria %>%
+  group_by(PAM_Cluster) %>%
+  summarise_all("mean")
+```
+
+#### Visualisation of PAM Cluster using tmap
+
+Using the `qtm()` function, we plot the Nigeria map based on their designated PAM cluster.
+
+```{r}
+qtm(nigeria,fill = "PAM_Cluster")
+```
+
+#### Visualisation of PAM Cluster using Parallel Coordinates Plot
+
+We will now visualise the variables using the `ggparcoord()` function.
+
+```{r,fig.height = 5, fig.width = 14}
+#| column: body-outset
+ggparcoord(nigeria,
+    columns = 2:8,
+    showPoints = TRUE, 
+    title = "Parallel Coordinate Plot for the Nigeria Attributes",
+    groupColumn = "PAM_Cluster",
+    alphaLines = 0.3,
+    scale="std",
+    boxplot = TRUE
+    ) + 
+  scale_color_viridis(discrete=TRUE) +
+  theme_ipsum()+
+  theme(
+    plot.title = element_text(size=10),
+    axis.text.x = element_text(size = 6)
+  ) +
+  facet_grid(~PAM_Cluster)
+```
+
+#### Interpretation of PAM Clustering Results
+
+From the above results, we can **infer** that **Cluster 2** and **Cluster 4** are areas of concerns with a higher average of *pct_nonfunctional* compared to *pct_functional*. These clusters also have a higher average of *pct_rural* which could infer that rural water points have **higher percentage** of being not functional. The most significant difference is that despite having a higher average of *pct_overuse*, **Cluster 1** have a higher **pct_functional** compared to **pct_nonfunctional**.
+
+### Visualisation of Traditional Clustering Results
+
+We will now visualise the `Nigeria` base map with all the different clustering results using `tmap`. Based on the plot below, we can generally identify that the southern region are the region that are area of concerns based on their `pct_nonfunctional` and `pct_functional`. This result is consistent among all the different clustering algorithm.
+
+```{r, fig.width=12}
+#| column: page
+
+tmap_mode ("plot")
+HC_Clust <- tm_shape (nigeria) +
+  tm_polygons("HR_Cluster",
+          title = "Hierarchical Cluster") +
+  tm_layout(main.title = "Distribution of Hierarchical Cluster by ADM2",
+            main.title.position = "center",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5)
+
+K_Clust <- tm_shape (nigeria) +
+  tm_polygons("KM_Cluster",
+          title = "K-Means Cluster") +
+  tm_layout(main.title = "Distribution of K-Means Cluster by ADM2",
+            main.title.position = "center",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5)
+
+PAM_Clust <- tm_shape (nigeria) +
+  tm_polygons("PAM_Cluster",
+          title = "PAM Cluster") +
+  tm_layout(main.title = "Distribution of PAM Cluster by ADM2",
+            main.title.position = "center",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(HC_Clust, K_Clust, PAM_Clust, ncol = 3, asp = 1)
+
+```
+
+## Spatially Constrainted Clustering
+
+Clustering data is well-trodden territory, and many approaches apply to geographical data as well. The advantage of spatially limited approaches is that it requires spatial objects in the same cluster to be geographically related. This has a number of benefits in real-world applications that require breaking geographies into discrete sections (regionalization), such as building communities, planning areas, amenity zones, logistical units, or even setting up experiments with real-world geographic limits.
+
+In this section, we will explore **3** different spatially constrained clustering algorithm namely:
+
+-   Spatial 'K'luster Analysis by Tree Edge Removal(SKATER)
+-   Spatially Constrained Hierarchical Clustering
+-   Regionalization with Dynamically Constrained Agglomerative clustering and Partitioning (REDCAP)
+
+### SKATER
+
+The SKATER algorithm is based on a connectivity graph to express spatial relationships between neighboring regions, with each area represented by a node and edges representing connections between areas. The dissimilarity between neighboring areas is used to compute edge costs.
+
+#### Retrieving the neighbour list
+
+We will use the [`poly2nb`](https://www.rdocumentation.org/packages/spdep/versions/1.2-7/topics/poly2nb) function to construct neighbours list based on the regions with contiguous boundaries. Based on the documentation, user will be able to pass a `queen` argument that takes in True or False. The argument the default is set to TRUE, that is, if you don't specify queen = FALSE this function will return a list of first order neighbours using the Queen criteria.
+
+```{r}
+nigeria_nb <- poly2nb(nigeria, queen=TRUE)
+summary(nigeria_nb)
+```
+
+From the summary, we can identify 4 regions with only **1** neighbour and 1 region with **14** neighbours. The average number of neighbours per region is **5**.
+
+#### Retrieving the Centroid of Polygon
+
+A connectivity graph takes a point and displays a line to each neighboring point. We are working with polygons at the moment, so we will need to get points in order to make our connectivity graphs. The most typically method for this will be polygon centroids. To retrieve the centroid of each area, we will use the `st_centroid` function.
+
+```{r}
+coords <- st_centroid(st_geometry(nigeria))
+```
+
+#### Visualising of neighbours
+
+We will now plot and visualise the neighbours relationship for each region.
+
+```{r, fig.height=7, fig.width=8}
+plot(nigeria$geometry, 
+     border=grey(.5))
+plot(nigeria_nb, 
+     coords, 
+     col="blue", 
+     add=TRUE)
+```
+
+#### Computing Edge Cost
+
+Using the `nbcosts()` function, we will calculate the distance between each node which is define as the cost of the edge. For each observation, this gives the pairwise dissimilarity between its values on the five variables and the values for the neighbouring observation (from the neighbour list). Basically, this is the notion of a generalised weight for a spatial weights matrix.
+
+```{r}
+lcosts <- nbcosts(nigeria_nb, nigeria_cluster_var)
+```
+
+#### Computing Neighbour Weights based on Edge Cost
+
+We will now incorporate the cost into a weights object. This is done by using the `nb2listw()` function and setting the `style` to **B**.
+
+```{r}
+nigeria_weight <- nb2listw(nigeria_nb, 
+                   lcosts, 
+                   style="B")
+summary(nigeria_weight)
+```
+
+#### Computing Minimal Spanning Tree (MST)
+
+We will now compute the minimal spanning tree which depicts a fully connected graph with only one neighbour per node. The MST is computed by the `mstree()` function from the **spdep** package.
+
+```{r}
+nigeria_mst <- mstree(nigeria_weight)
+
+head(nigeria_mst)
+```
+
+#### Computing SKATER clustering
+
+The code chunk below compute the spatially constrained cluster using `skater()` of **spdep** package.\
+The `skater()` takes three mandatory arguments:
+
+-   first two columns of the MST matrix (i.e. not the cost)
+
+-   data matrix (to update the costs as units are being grouped)
+
+-   number of cuts.
+
+::: callout-note
+The cut is set to **one less than the number of clusters**. So, the value specified is not the number of clusters, but the number of cuts in the graph.
+:::
+
+```{r}
+set.seed(1234)
+clust4 <- spdep::skater(edges = nigeria_mst[,1:2], 
+                 data = nigeria_cluster_var, 
+                 method = "manhattan", 
+                 ncuts = 3)
+```
+
+#### Visualisation of SKATER group Summary
+
+Using the `table()` function, we can retrieve the number of areas within each cluster.
+
+```{r}
+ccs4 <- clust4$groups
+table(ccs4)
+```
+
+#### Summary of SKATER Cluster
+
+We will then have a quick summary on the cluster by first binding the new cluster column to the `Nigeria` data frame, then the `summarise_all` function to display the average of each variables based on their cluster.
+
+```{r}
+groups_mat <- as.matrix(clust4$groups)
+nigeria <- cbind(nigeria, as.factor(groups_mat)) %>%
+  rename(Skater_Cluster =`as.factor.groups_mat.`)
+
+nigeria %>%
+  group_by(Skater_Cluster) %>%
+  summarise_all("mean")
+```
+
+#### Visualisation of SKATER Cluster using tmap
+
+Using the `qtm()` function, we plot the Nigeria map based on their designated SKATER cluster.
+
+```{r}
+qtm(nigeria, "Skater_Cluster")
+```
+
+#### Visualisation of SKATER Cluster using Parallel Coordinates Plot
+
+We will visualise the results using the `ggparcoord()` function.
+
+```{r,fig.height = 5, fig.width = 14}
+#| column: body-outset
+ggparcoord(nigeria,
+    columns = 2:8,
+    showPoints = TRUE, 
+    title = "Parallel Coordinate Plot of SKATER for the Nigeria Attributes",
+    groupColumn = "Skater_Cluster",
+    alphaLines = 0.3,
+    scale="std",
+    boxplot = TRUE
+    ) + 
+  scale_color_viridis(discrete=TRUE) +
+  theme_ipsum()+
+  theme(
+    plot.title = element_text(size=10),
+    axis.text.x = element_text(size = 6)
+  ) +
+  facet_grid(~Skater_Cluster)
+```
+
+#### Interpretation of SKATER Clustering Results
+
+From the above results, we can **infer** that **Cluster 3** and **Cluster 4** are areas of concerns with a higher average of *pct_nonfunctional* compared to *pct_functional*. These clusters also have a higher average of *pct_overuse* and *pct_mechpump* which could infer that *mech pump* are placed in areas that areas that have higher population to water point.
+
+### Spatially Constrained Hierarchical Clustering
+
+In this section, we will conduct Spatially Constrained Hierarchical Clustering using the `hclustgeo()` function from the [`ClustGeo`](https://cran.r-project.org/web/packages/ClustGeo/vignettes/intro_ClustGeo.html) package. The `ClustGeo` implements a Ward-like hierarchical clustering algorithm including spatial/geographical constraints. It also includes a mixing parameter $\alpha$ that will use to increases the spatial contiguity without deteriorating too much the quality of the solution based on the variables of interest.
+
+#### Computing Distance Matrix of Polygon
+
+Before we can performed spatially constrained hierarchical clustering, a spatial distance matrix will be derived by using `st_distance()` from the **sf** package.
+
+::: callout-note
+as.dist() instead of as.matrix() is used to convert the data frame into matrix.
+:::
+
+```{r}
+dist <- st_distance(nigeria, nigeria)
+distmat <- as.dist(dist)
+```
+
+#### Computing Optimal Mixing Parameter
+
+To retrieve the optimal mixing parameter, we will use the `choicealpha()` function from `ClustGeo` package. From the results below, we can see that $\alpha$ *0.2* produces the
+
+```{r}
+set.seed(1234)
+cr <- choicealpha(proxmat, distmat, range.alpha = seq(0, 1, 0.1), K=4, graph = TRUE)
+```
+
+#### Computing of Spatially Constrained Hierarchical Clustering
+
+```{r}
+set.seed(1234)
+clustG <- hclustgeo(proxmat, distmat, alpha = 0.2)
+```
+
+#### Summary of Spatially Constrained Hierarchical Cluster
+
+We will then have a quick summary on the cluster by first binding the new cluster column to the `Nigeria` data frame, then the `summarise_all` function to display the average of each variables based on their cluster. Similar to our unconstrained hierarchical cluster, we will use the `cutree()` function to retrieve **4** cluster based on the hierarchy.
+
+```{r}
+groups <- as.factor(cutree(clustG, k=4))
+
+nigeria <- cbind(nigeria, as.matrix(groups)) %>%
+  rename(`HR_Spatial_Cluster` = `as.matrix.groups.`)
+
+nigeria %>%
+  group_by(HR_Spatial_Cluster) %>%
+  summarise_all("mean")
+```
+
+#### Visualisation of Spatially Constrained Hierarchical Cluster using tmap
+
+Using the `qtm()` function, we plot the Nigeria map based on their designated Hierarchical Cluster.
+
+```{r}
+qtm(nigeria, "HR_Spatial_Cluster")
+```
+
+#### Visualisation of Spatially Constrained Hierarchical Cluster using Parallel Coordinates Plot
+
+We will visualise the results using the `ggparcoord()` function.
+
+```{r,fig.height = 5, fig.width = 14}
+#| column: body-outset
+ggparcoord(nigeria,
+    columns = 2:8,
+    showPoints = TRUE, 
+    title = "Parallel Coordinate Plot for the Nigeria Attributes",
+    groupColumn = "HR_Spatial_Cluster",
+    alphaLines = 0.3,
+    scale="std",
+    boxplot = TRUE
+    ) + 
+  scale_color_viridis(discrete=TRUE) +
+  theme_ipsum()+
+  theme(
+    plot.title = element_text(size=10),
+    axis.text.x = element_text(size = 6)
+  ) +
+  facet_grid(~HR_Spatial_Cluster)
+```
+
+#### Interpretation of Spatially Constrained Hierarchical Cluster Results
+
+From the above results, we can **infer** that **Cluster 1** with a higher average of *pct_nonfunctional* compared to *pct_functional* can be deemed as an area of concern. The cluster also have a higher average of *pct_overuse*. **Cluster 3** and **Cluster 4** are areas that are less of a concern with a higher average of *pct_functional* than *pct_nonfunctional*.
+
+### REDCAP
+
+REDCAP starts from building a spanning tree with 4 different ways (**single-linkage**, **average-linkage**, **ward-linkage** and the **complete-linkage**). The single-linkage way leads to build a minimum spanning tree which is similar to SKATER. Then,REDCAP provides 2 different ways (**first-order** and **full-order** constraining) to prune the tree to find clusters. The first-order approach with a minimum spanning tree is exactly the same with SKATER.
+
+In GeoDa and pygeoda, the following methods are provided: *First-order and Single-linkage*, *Full-order and Complete-linkage*, *Full-order and Average-linkage*, *Full-order and Single-linkage* and *Full-order and Ward-linkage*.
+
+For this analysis, we will conduct the **Full- Order and Complete-Linkage** approach.
+
+#### Computing REDCAP Cluster
+
+Before we compute the REDCAP cluster, we need to derive the weights in a weights class using the `queen_weights()` function from the **sf** package. Next we will use the `redcap()` function from the **sf** package that takes in **4** mandatory inputs:
+
+-   Cluster Size
+-   Weights in Weights class
+-   Dataframe of variables
+-   Approach
+
+For this approach, we will analyse with **6** cluster.
+
+```{r}
+set.seed(1234)
+nigeria_weights_sf <- queen_weights(nigeria)
+nigeria_clusters  <- redcap(6, nigeria_weights_sf, nigeria_cluster_var, "fullorder-completelinkage")
+```
+
+Using the `table()` function, we can retrieve the number of areas within each cluster.
+
+```{r}
+table(nigeria_clusters$Clusters)
+```
+
+#### Summary of REDCAP
+
+We will then have a quick summary on the cluster by first binding the new cluster column to the `Nigeria` data frame, then the `summarise_all` function to display the average of each variables based on their cluster.
+
+```{r}
+redcap_cluster <- as.matrix(nigeria_clusters$Clusters)
+nigeria <- cbind(nigeria, as.factor(redcap_cluster)) %>%
+  rename(`RC_Cluster`=`as.factor.redcap_cluster.`)
+
+nigeria %>%
+  group_by(RC_Cluster) %>%
+  summarise_all("mean")
+```
+
+#### Visualisation of REDCAP using tmap
+
+Using the `qtm()` function, we plot the Nigeria map based on their designated REDCAP.
+
+```{r}
+qtm(nigeria, "RC_Cluster")
+```
+
+#### Visualisation of REDCAP using Parallel Coordinates Plot
+
+We will visualise the results using the `ggparcoord()` function.
+
+```{r,fig.height = 5, fig.width = 16}
+#| column: body-outset
+ggparcoord(nigeria,
+    columns = 2:8,
+    showPoints = TRUE, 
+    title = "Parallel Coordinate Plot of REDCAP for the Nigeria Attributes",
+    groupColumn = "RC_Cluster",
+    alphaLines = 0.3,
+    scale="std",
+    boxplot = TRUE
+    ) + 
+  scale_color_viridis(discrete=TRUE) +
+  theme_ipsum()+
+  theme(
+    plot.title = element_text(size=10),
+    axis.text.x = element_text(size = 6)
+  ) +
+  facet_grid(~RC_Cluster)
+```
+
+#### Interpretation of REDCAP Results
+
+From the above results, we can **infer** that **Cluster 3** and **Cluster 4** with a higher average of *pct_nonfunctional* compared to *pct_functional* can be deemed as an area of concern. These cluster also have a higher average of *pct_overuse* and *pct_mechpump*. **Cluster 1** and **Cluster 2** are areas that are less of a concern with a higher average of *pct_functional* than *pct_nonfunctional*. **Cluster 6** with only 2 observations seems to be an area of concern the highest average of *pct_overuse*.
+
+### Visualisation of Spatially Constrained Clustering Results
+
+We will now visualise the `Nigeria` base map with all the different clustering results using `tmap`. Based on the plot below, we can generally identify that the southern region are the highlighted as the same cluster and these regions are deemed area of concerns based on their `pct_nonfunctional` and `pct_functional` on the earlier results. This result is consistent among all the different spatially clustering algorithm.
+
+```{r, fig.width=12}
+#| column: page
+tmap_mode ("plot")
+SKATER_Clust <- tm_shape (nigeria) +
+  tm_polygons("Skater_Cluster",
+          title = "SKATER Cluster") +
+  tm_layout(main.title = "Distribution of SKATER Cluster by ADM2",
+            main.title.position = "center",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5)
+
+SHC_Clust <- tm_shape (nigeria) +
+  tm_polygons("HR_Spatial_Cluster",
+          title = "Spatially Constrained Hierarchical Cluster") +
+  tm_layout(main.title = "Distribution of Spatially Constrained Hierarchical Cluster by ADM2",
+            main.title.position = "center",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5)
+
+REDCAP_Clust <- tm_shape (nigeria) +
+  tm_polygons("RC_Cluster",
+          title = "REDCAP Cluster") +
+  tm_layout(main.title = "Distribution of REDCAP Cluster by ADM2",
+            main.title.position = "center",
+            main.title.size = 0.7,
+            main.title.fontface = "bold",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(SKATER_Clust, SHC_Clust, REDCAP_Clust, ncol = 3, asp = 1)
+```
+
+## Interpretation of all the Clustering Results using Statistical graph
+
+### Visualisation of all the Clustering Results
+
+```{r, fig.width=12}
+#| column: page
+tmap_arrange(HC_Clust, K_Clust, PAM_Clust, SKATER_Clust, SHC_Clust, REDCAP_Clust, ncol = 3, asp = 1)
+```
+
+### Visualisation of all the Clustering Results using statistical plot
+
+Before plotting the statistical plot, we will need to prepare the data frame to be able to group the different clusters as a group. We will have to pivot the dataframe from wide to long using the `pivot_longer()` function from `dpylr`. Once we have done that, we will change the class of the `Cluster Type` to factor and arrange the order of presentation (Traditional Clustering -\> Spatially Constrainted Clustering).
+
+```{r}
+nigeria_stats <- nigeria %>%
+  pivot_longer(
+    cols = (9:14),
+    names_to = "Cluster_Type",
+    values_to = "Cluster_Number"
+  ) %>%
+  st_drop_geometry()
+
+nigeria_stats$Cluster_Type <- factor(nigeria_stats$Cluster_Type, order = TRUE, levels = c("HR_Cluster", "KM_Cluster", "PAM_Cluster","Skater_Cluster","HR_Spatial_Cluster","RC_Cluster"))
+
+```
+
+We will use the `grouped_ggbetweenstats()` from the **ggstatsplot** package to visualise the distribution of `pct_nonfunctional` and see if indeed the clusters have higher/lower areas with `pct_nonfunctional`.
+
+From the plot below, we can see that clustering results from the **traditional clustering** provide better statistical prove that the areas identified earlier through the interpretation of the `ggparcoord` are statistically significant. Whereas the distribution from the **spatially constrainted clustering** despite having a p-value of \< 0.05, not all areas identified above have a significant difference in their `pct_nonfunctional`.
+
+```{r, fig.height=10,fig.width=14}
+#| column: page
+grouped_ggbetweenstats(
+  data             = nigeria_stats,
+  x                = Cluster_Number,
+  y                = pct_nonfunctional,
+  grouping.var     = Cluster_Type,
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 2),
+  annotation.args  = list(title = "Does the Percentage of Non-Functional Water Point Significantly different from each Cluster?")
+)
+```
+
+## Conclusion
+
+From our analysis, we can clearly identify the constraint of using **spatially constrainted clustering** with the areas having not so clearly define variables compared to other clusters. Traditional Clustering algorithm still provide better results in clearly defining the areas. But, spatially constrained clustering will be useful if there is a need to have concentrated resources/limited resources in a specific area, and therefore the clusters should be spatially connected instead of sparse.
