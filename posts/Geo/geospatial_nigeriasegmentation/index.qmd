@@ -9,7 +9,7 @@ categories:
   - spdep
   - tmap
   - clustering
-image: "nigeria.png"
+image: "spatialclustering.png"
 toc: true
 editor: visual
 ---
