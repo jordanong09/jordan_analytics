@@ -1,6 +1,6 @@
 ---
 title: " Regionalisation of Multivariate Water Point Attributes with Non-spatially Constrained and Spatially Constrained Clustering Methods"
-subtitle: A regionalization is a specific type of clustering whose goal is to combine data that are comparable in both their statistical characteristics and their geographic locations. Regionalization uses the same logic as conventional clustering approaches in this regard, but it additionally imposes a number of geographical restrictions. These restrictions frequently have to do with connectivity. It is not always necessary for connectedness to be true for all regions, and in some situations it makes sense to loosen connectivity or to impose alternative kinds of geographic restrictions.
+subtitle: Understanding the difference between traditional clustering algorithm and spatially constrained clustering algorithm.
 author: "Ong Zhi Rong Jordan"
 date: 2022-12-07
 categories:
