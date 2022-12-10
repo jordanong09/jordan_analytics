@@ -245,6 +245,10 @@ tmap_mode("view")
 Next, the code chunks below is used to create an interactive point symbol map.
 
 ```{r}
+st_is_valid(mpsz_svy21, reason = TRUE)
+```
+
+```{r}
 tmap_options(check.and.fix = TRUE)
 tm_shape(mpsz_svy21)+
   tm_polygons() +
@@ -273,7 +277,7 @@ In this section, you will learn how to building hedonic pricing models for condo
 
 First, we will build a simple linear regression model by using *SELLING_PRICE* as the dependent variable and *AREA_SQM* as the independent variable.
 
-``` {r}
+```{r}
 condo.slr <- lm(formula=SELLING_PRICE ~ AREA_SQM, data = condo_resale.sf)
 ```
 
@@ -281,7 +285,7 @@ condo.slr <- lm(formula=SELLING_PRICE ~ AREA_SQM, data = condo_resale.sf)
 
 The functions `summary()` and `anova()` can be used to obtain and print a summary and analysis of variance table of the results. The generic accessor functions coefficients, effects, fitted.values and residuals extract various useful features of the value returned by `lm`.
 
-```{r} 
+```{r}
 summary(condo.slr)
 ```
 
@@ -297,7 +301,7 @@ The **Coefficients:** section of the report reveals that the p-values of both th
 
 To visualise the best fit curve on a scatterplot, we can incorporate `lm()` as a method function in ggplot's geometry as shown in the code chunk below.
 
-``` {r}
+```{r}
 ggplot(data=condo_resale.sf,  
        aes(x=`AREA_SQM`, y=`SELLING_PRICE`)) +
   geom_point() +
@@ -316,7 +320,7 @@ Correlation matrix is commonly used to visualise the relationships between the i
 
 The code chunk below is used to plot a scatterplot matrix of the relationship between the independent variables in *condo_resale* data.frame.
 
-``` {r}
+```{r}
 corrplot(cor(condo_resale[, 5:23]), diag = FALSE, order = "AOE",
          tl.pos = "td", tl.cex = 0.5, method = "number", type = "upper")
 ```
@@ -329,7 +333,7 @@ From the scatterplot matrix, it is clear that ***Freehold*** is highly correlate
 
 The code chunk below using `lm()` to calibrate the multiple linear regression model.
 
-``` {r}
+```{r}
 condo.mlr <- lm(formula = SELLING_PRICE ~ AREA_SQM + AGE    + 
                   PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE +
                   PROX_URA_GROWTH_AREA + PROX_HAWKER_MARKET + PROX_KINDERGARTEN + 
@@ -346,7 +350,7 @@ With reference to the report above, it is clear that not all the independent var
 
 Now, we are ready to calibrate the revised model by using the code chunk below.
 
-``` {r}
+```{r}
 condo.mlr1 <- lm(formula = SELLING_PRICE ~ AREA_SQM + AGE + 
                    PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE +
                    PROX_URA_GROWTH_AREA + PROX_MRT  + PROX_PARK + 
@@ -362,13 +366,13 @@ The [**gtsummary**](https://www.danieldsjoberg.com/gtsummary/) package provides 
 
 In the code chunk below, [`tbl_regression()`](https://www.danieldsjoberg.com/gtsummary/reference/tbl_regression.html) is used to create a well formatted regression report.
 
-``` {r}
+```{r}
 tbl_regression(condo.mlr1, intercept = TRUE)
 ```
 
 With gtsummary package, model statistics can be included in the report by either appending them to the report table by using [`add_glance_table()`](https://www.danieldsjoberg.com/gtsummary/reference/add_glance.html) or adding as a table source note by using [`add_glance_source_note()`](https://www.danieldsjoberg.com/gtsummary/reference/add_glance.html) as shown in the code chunk below.
 
-``` {r}
+```{r}
 tbl_regression(condo.mlr1, 
                intercept = TRUE) %>% 
   add_glance_source_note(
@@ -402,7 +406,7 @@ In this section, we would like to introduce you a fantastic R package specially 
 
 In the code chunk below, the [`ols_vif_tol()`](https://olsrr.rsquaredacademy.com/reference/ols_coll_diag.html) of **olsrr** package is used to test if there are sign of multicollinearity.
 
-``` {r}
+```{r}
 ols_vif_tol(condo.mlr1)
 ```
 
@@ -414,7 +418,7 @@ In multiple linear regression, it is important for us to test the assumption tha
 
 In the code chunk below, the [`ols_plot_resid_fit()`](https://olsrr.rsquaredacademy.com/reference/ols_plot_resid_fit.html) of **olsrr** package is used to perform linearity assumption test.
 
-``` {r}
+```{r}
 ols_plot_resid_fit(condo.mlr1)
 ```
 
@@ -424,7 +428,7 @@ The figure above reveals that most of the data poitns are scattered around the 0
 
 Lastly, the code chunk below uses [`ols_plot_resid_hist()`](https://olsrr.rsquaredacademy.com/reference/ols_plot_resid_hist.html) of *olsrr* package to perform normality assumption test.
 
-``` {r}
+```{r}
 ols_plot_resid_hist(condo.mlr1)
 ```
 
@@ -432,7 +436,7 @@ The figure reveals that the residual of the multiple linear regression model (i.
 
 If you prefer formal statistical test methods, the [`ols_test_normality()`](https://olsrr.rsquaredacademy.com/reference/ols_test_normality.html) of **olsrr** package can be used as shown in the code chun below.
 
-``` {r}
+```{r}
 ols_test_normality(condo.mlr1)
 ```
 
@@ -446,13 +450,13 @@ In order to perform spatial autocorrelation test, we need to convert *condo_resa
 
 First, we will export the residual of the hedonic pricing model and save it as a data frame.
 
-``` {r}
+```{r}
 mlr.output <- as.data.frame(condo.mlr1$residuals)
 ```
 
 Next, we will join the newly created data frame with *condo_resale.sf* object.
 
-``` {r}
+```{r}
 condo_resale.res.sf <- cbind(condo_resale.sf, 
                         condo.mlr1$residuals) %>%
 rename(`MLR_RES` = `condo.mlr1.residuals`)
@@ -462,7 +466,7 @@ Next, we will convert *condo_resale.res.sf* from simple feature object into a Sp
 
 The code chunk below will be used to perform the data conversion process.
 
-``` {r}
+```{r}
 condo_resale.sp <- as_Spatial(condo_resale.res.sf)
 condo_resale.sp
 ```
@@ -471,13 +475,13 @@ Next, we will use **tmap** package to display the distribution of the residuals 
 
 The code churn below will turn on the interactive mode of tmap.
 
-``` {r}
+```{r}
 tmap_mode("view")
 ```
 
 The code chunks below is used to create an interactive point symbol map.
 
-``` {r}
+```{r}
 tm_shape(mpsz_svy21)+
   tmap_options(check.and.fix = TRUE) +
   tm_polygons(alpha = 0.4) +
@@ -490,7 +494,7 @@ tm_shape(condo_resale.res.sf) +
 
 Remember to switch back to "plot" mode before continue.
 
-``` {r}
+```{r}
 tmap_mode("plot")
 ```
 
@@ -500,21 +504,21 @@ To proof that our observation is indeed true, the Moran's I test will be perform
 
 First, we will compute the distance-based weight matrix by using [`dnearneigh()`](https://r-spatial.github.io/spdep/reference/dnearneigh.html) function of **spdep**.
 
-``` {r}
+```{r}
 nb <- dnearneigh(coordinates(condo_resale.sp), 0, 1500, longlat = FALSE)
 summary(nb)
 ```
 
 Next, [`nb2listw()`](https://r-spatial.github.io/spdep/reference/nb2listw.html) of **spdep** packge will be used to convert the output neighbours lists (i.e. nb) into a spatial weights.
 
-``` {r}
+```{r}
 nb_lw <- nb2listw(nb, style = 'W')
 summary(nb_lw)
 ```
 
 Next, [`lm.morantest()`](https://r-spatial.github.io/spdep/reference/lm.morantest.html) of **spdep** package will be used to perform Moran's I test for residual spatial autocorrelation
 
-``` {r}
+```{r}
 lm.morantest(condo.mlr1, nb_lw)
 ```
 
@@ -534,7 +538,7 @@ In the code chunk below `bw.gwr()` of GWModel package is used to determine the o
 
 There are two possible approaches can be uused to determine the stopping rule, they are: CV cross-validation approach and AIC corrected (AICc) approach. We define the stopping rule using ***approach*** argeement.
 
-``` {r}
+```{r}
 bw.fixed <- bw.gwr(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + 
                      PROX_CHILDCARE + PROX_ELDERLYCARE  + PROX_URA_GROWTH_AREA + 
                      PROX_MRT   + PROX_PARK + PROX_PRIMARY_SCH + 
@@ -553,7 +557,7 @@ The result shows that the recommended bandwidth is 971.3398 metres.
 
 Now we can use the code chunk below to calibrate the gwr model using fixed bandwidth and gaussian kernel.
 
-``` {r}
+```{r}
 gwr.fixed <- gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + 
                          PROX_CHILDCARE + PROX_ELDERLYCARE  + PROX_URA_GROWTH_AREA + 
                          PROX_MRT   + PROX_PARK + PROX_PRIMARY_SCH + 
@@ -567,7 +571,7 @@ gwr.fixed <- gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD +
 
 The output is saved in a list of class "gwrm". The code below can be used to display the model output.
 
-``` {r}
+```{r}
 gwr.fixed
 ```
 
@@ -583,7 +587,7 @@ Similar to the earlier section, we will first use *bw.ger()* to determine the re
 
 The code chunk used look very similar to the one used to compute the fixed bandwidth except the ***adaptive*** argument has changed to **TRUE**.
 
-``` {r}
+```{r}
 bw.adaptive <- bw.gwr(formula = SELLING_PRICE ~ AREA_SQM + AGE  + 
                         PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE    + 
                         PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK + 
@@ -620,7 +624,9 @@ The code below can be used to display the model output.
 gwr.adaptive
 ```
 
-The report shows that the adjusted r-square of the gwr is 0.8561 which is significantly better than the globel multiple linear regression model of 0.6472.
+The report shows that the adjusted r-square of the gwr is 0.8561 which is significantly better than the globel multiple linear regression model of 0.6472. The AICc for the weighted regression also shows a smaller value compared to the global regression model which mean that the weighted regression model is slightly better in performance that the global regression model.
+
+The result also shows *illogical* based on *estimate* derive from the summary of the regression model. 
 
 ### 6.9.3 Visualising GWR Output
 
@@ -692,4 +698,35 @@ tm_shape(condo_resale.sf.adaptive) +
            size = 0.15,
            border.col = "gray60",
            border.lwd = 1)
+```
+
+#### 6.9.6 Visualising coefficient estimates
+
+The code chunks below is used to create an interactive point symbol map.
+
+```{r}
+tmap_mode("view")
+AREA_SQM_SE <- tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(condo_resale.sf.adaptive) +  
+  tm_dots(col = "AREA_SQM_SE",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
+
+AREA_SQM_TV <- tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(condo_resale.sf.adaptive) +  
+  tm_dots(col = "AREA_SQM_TV",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
+
+tmap_arrange(AREA_SQM_SE, AREA_SQM_TV, 
+             asp=1, ncol=2,
+             sync = TRUE)
+```
+
+```{r}
+
 ```

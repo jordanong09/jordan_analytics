@@ -3,7 +3,6 @@ project:
 
 website:
   title: "Bringing Data to Life"
-  description: "L"
   image: /media/profile.png
   navbar:
     search: true
