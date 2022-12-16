@@ -626,7 +626,7 @@ gwr.adaptive
 
 The report shows that the adjusted r-square of the gwr is 0.8561 which is significantly better than the globel multiple linear regression model of 0.6472. The AICc for the weighted regression also shows a smaller value compared to the global regression model which mean that the weighted regression model is slightly better in performance that the global regression model.
 
-The result also shows *illogical* based on *estimate* derive from the summary of the regression model. 
+The result also shows *illogical* based on *estimate* derive from the summary of the regression model.
 
 ### 6.9.3 Visualising GWR Output
 
@@ -727,6 +727,7 @@ tmap_arrange(AREA_SQM_SE, AREA_SQM_TV,
              sync = TRUE)
 ```
 
-```{r}
-
+```{}
 ```
+
+Conclusion
