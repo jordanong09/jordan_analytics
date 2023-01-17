@@ -286,7 +286,7 @@ prob_T
 We will convert the t_score of the variable to its equivalent p-value and retrieve the statically significant rows.
 
 ```{r}
-tscore <- gwr_sf.fixed$distance_to_tertiary_road_SE
+tscore <- gwr_sf.fixed$distance_to_tertiary_road_TV
 pval_distance_tertiary = 2*pt(q = tscore, df = 4755, lower.tail = FALSE)
 gwr_sf.fixed <- cbind(gwr_sf.fixed, pval_distance_tertiary)
 ```
@@ -297,7 +297,7 @@ We will now visualise the standard error of the distance to tertiary road after 
 tmap_mode("view")
 tertiary_TV <- tm_shape(Osun)+
     tm_polygons(alpha=0.1)+
-    tm_shape(gwr_sf.fixed[gwr_sf.fixed$pval_distance_tertiary <0.05,])+
+    tm_shape(gwr_sf.fixed[gwr_sf.fixed$distance_to_tertiary_road_TV> 1.9605 | gwr_sf.fixed$distance_to_tertiary_road_TV < -1.9605,])+
     tm_dots(col="distance_to_tertiary_road_TV",
             border.col="gray60",
             border.lwd = 1)+
@@ -305,12 +305,20 @@ tertiary_TV <- tm_shape(Osun)+
 
 tertiary_SE <- tm_shape(Osun)+
     tm_polygons(alpha=0.1)+
-    tm_shape(gwr_sf.fixed[gwr_sf.fixed$pval_distance_tertiary <0.05,])+
+    tm_shape(gwr_sf.fixed[gwr_sf.fixed$distance_to_tertiary_road_TV> 1.9605 | gwr_sf.fixed$distance_to_tertiary_road_TV < -1.9605,])+
     tm_dots(col="distance_to_tertiary_road_SE",
             border.col="gray60",
             border.lwd = 1)+
     tm_view(set.zoom.limits = c(8,14))
 tmap_arrange(tertiary_SE, tertiary_TV, asp=1, ncol=2, sync=TRUE)
+```
+
+```{r}
+gwr_sf.fixed[gwr_sf.fixed$distance_to_tertiary_road_TV> 1.9605,]
+```
+
+```{r}
+pval_distance_tertiary
 ```
 
 ### Conclusion
