@@ -2,10 +2,8 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/Me/Fraud Detection/index.html",
       "/posts/Me/RFM/index.html",
       "/posts/Me/SIS Representation/index.html",
-      "/posts/Geo/geospatial_nigeriaLinear/index.html",
       "/posts/Geo/geospatial_linearRegression/index.html",
       "/posts/Geo/geospatial_nigeriasegmentation/index.html",
       "/posts/Geo/Geographic_Segmentation/index.html",
@@ -20,7 +18,6 @@
     "listing": "/posts/geo.html",
     "items": [
       "/posts/Geo/geospatial_nigeriaLinear/index.html",
-      "/posts/Geo/geospatial_linearRegression/index.html",
       "/posts/Geo/geospatial_nigeriasegmentation/index.html",
       "/posts/Geo/Geographic_Segmentation/index.html",
       "/posts/Geo/Geospatial_Exercise/index.html",
@@ -33,9 +30,7 @@
   {
     "listing": "/posts/index.html",
     "items": [
-      "/posts/Me/Fraud Detection/index.html",
       "/posts/Geo/geospatial_nigeriaLinear/index.html",
-      "/posts/Geo/geospatial_linearRegression/index.html",
       "/posts/Geo/geospatial_nigeriasegmentation/index.html",
       "/posts/Geo/Geographic_Segmentation/index.html",
       "/posts/Geo/Geospatial_Exercise/index.html",

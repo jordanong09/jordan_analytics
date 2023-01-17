@@ -1,5 +1,0 @@
----
-title: "Car Insurance Fraud Detection"
-author: "Ong Zhi Rong Jordan"
-editor: visual
----
